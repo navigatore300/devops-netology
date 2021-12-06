@@ -26,6 +26,8 @@ override.tf.json	Файл override.tf на любой глубине игнор�
 
 terraform.rc		Файл terraform.rc на любой глубине игнорируется
 
-hotfix
+add line in branch fix
 
-iss53
+one line
+
+edit branch_test
