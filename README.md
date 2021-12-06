@@ -21,3 +21,5 @@ terraform.rc		Файл terraform.rc на любой глубине игнори�
 add line in branch fix
 
 one line
+
+edit branch_test
