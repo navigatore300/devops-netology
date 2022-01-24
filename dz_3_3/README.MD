@@ -59,6 +59,25 @@ _Ответ:_
 
 _Ответ:_  
 
+Произвел действия с открытым своп файлом редактора vi.  
+В одном терминале открыл `vi` чтобы тот создал временный файл.
+Во втором терминале произвел действия:
+```
+vagrant@vagrant:~$ ps -a
+    PID TTY          TIME CMD
+   6775 pts/0    00:00:00 vi
+   6813 pts/1    00:00:00 ps
+vagrant@vagrant:~$ sudo lsof -p 6775 | grep swp
+vi      6775 vagrant    3u   REG  253,0    12288 1048609 /home/vagrant/.1.txt.swp
+vagrant@vagrant:~$ rm /home/vagrant/.1.txt.swp
+vagrant@vagrant:~$ sudo lsof -p 6775 | grep swp
+vi      6775 vagrant    3u   REG  253,0    12288 1048609 /home/vagrant/.1.txt.swp (deleted)
+vagrant@vagrant:~$ sudo lsof -p 6775 | grep swp
+vi      6775 vagrant    3u   REG  253,0    12288 1048609 /home/vagrant/.1.txt.swp (deleted)
+vagrant@vagrant:~$ sudo echo '' > /proc/6775/fd/3
+vagrant@vagrant:~$ sudo lsof -p 6775 | grep swp
+vi      6775 vagrant    3u   REG  253,0        1 1048609 /home/vagrant/.1.txt.swp (deleted)
+```
 
 ---
 4. Занимают ли зомби-процессы какие-то ресурсы в ОС (CPU, RAM, IO)?
@@ -77,6 +96,37 @@ _Ответ:_
     На какие файлы вы увидели вызовы группы `open` за первую секунду работы утилиты? Воспользуйтесь пакетом `bpfcc-tools` для Ubuntu 20.04. Дополнительные [сведения по установке](https://github.com/iovisor/bcc/blob/master/INSTALL.md).
 
 _Ответ:_  
+
+Установил пакет:  
+sudo apt-get install bpfcc-tools linux-headers-$(uname -r)
+Получил следующий вывод:  
+```angular2html
+vagrant@vagrant:~$ dpkg -L bpfcc-tools | grep sbin/opensnoop
+/usr/sbin/opensnoop-bpfcc
+vagrant@vagrant:~$ sudo -i
+root@vagrant:~# /usr/sbin/opensnoop-bpfcc
+PID    COMM               FD ERR PATH
+1232   vminfo              5   0 /var/run/utmp
+636    dbus-daemon        -1   2 /usr/local/share/dbus-1/system-services
+636    dbus-daemon        18   0 /usr/share/dbus-1/system-services
+636    dbus-daemon        -1   2 /lib/dbus-1/system-services
+636    dbus-daemon        18   0 /var/lib/snapd/dbus-1/system-services/
+643    irqbalance          6   0 /proc/interrupts
+643    irqbalance          6   0 /proc/stat
+643    irqbalance          6   0 /proc/irq/20/smp_affinity
+643    irqbalance          6   0 /proc/irq/0/smp_affinity
+643    irqbalance          6   0 /proc/irq/1/smp_affinity
+643    irqbalance          6   0 /proc/irq/8/smp_affinity
+643    irqbalance          6   0 /proc/irq/12/smp_affinity
+643    irqbalance          6   0 /proc/irq/14/smp_affinity
+643    irqbalance          6   0 /proc/irq/15/smp_affinity
+1232   vminfo              5   0 /var/run/utmp
+636    dbus-daemon        -1   2 /usr/local/share/dbus-1/system-services
+636    dbus-daemon        18   0 /usr/share/dbus-1/system-services
+636    dbus-daemon        -1   2 /lib/dbus-1/system-services
+636    dbus-daemon        18   0 /var/lib/snapd/dbus-1/system-services/
+^Croot@vagrant:~#
+```
 
 
 ---
