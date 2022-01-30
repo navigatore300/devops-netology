@@ -138,13 +138,166 @@ root@vagrant:~# cat /proc/1986/environ
 ```
 >LANG=en_US.UTF-8PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/binLOGNAME=node_exporterUSER=node_exporterINVOCATION_ID=05c8edc57eee457790ba106dfd4541edJOURNAL_STREAM=9:31523my_node_env1=param
 
-my_node_env1=param
+ В окружении процесса можно видеть добавленную переменную из файла _my_node_env1=param_
 
 ---
 2. Ознакомьтесь с опциями node_exporter и выводом `/metrics` по-умолчанию. Приведите несколько опций, которые вы бы выбрали для базового мониторинга хоста по CPU, памяти, диску и сети.
 
 _Ответ:_  
+Для процессора:
+```
+# HELP node_cpu_seconds_total Seconds the CPUs spent in each mode.
+# TYPE node_cpu_seconds_total counter
+node_cpu_seconds_total{cpu="0",mode="idle"} 8097.5
+node_cpu_seconds_total{cpu="0",mode="iowait"} 2
+node_cpu_seconds_total{cpu="0",mode="irq"} 0
+node_cpu_seconds_total{cpu="0",mode="nice"} 0
+node_cpu_seconds_total{cpu="0",mode="softirq"} 1.86
+node_cpu_seconds_total{cpu="0",mode="steal"} 0
+node_cpu_seconds_total{cpu="0",mode="system"} 10.89
+node_cpu_seconds_total{cpu="0",mode="user"} 14.36
+node_cpu_seconds_total{cpu="1",mode="idle"} 8103.97
+node_cpu_seconds_total{cpu="1",mode="iowait"} 0.95
+node_cpu_seconds_total{cpu="1",mode="irq"} 0
+node_cpu_seconds_total{cpu="1",mode="nice"} 0
+node_cpu_seconds_total{cpu="1",mode="softirq"} 0.64
+node_cpu_seconds_total{cpu="1",mode="steal"} 0
+node_cpu_seconds_total{cpu="1",mode="system"} 8.96
+node_cpu_seconds_total{cpu="1",mode="user"} 10.78
+```
+Для дисков:
+```
+# HELP node_disk_info Info of /sys/block/<block_device>.
+# TYPE node_disk_info gauge
+node_disk_info{device="dm-0",major="253",minor="0"} 1
+node_disk_info{device="sda",major="8",minor="0"} 1
+# HELP node_disk_io_now The number of I/Os currently in progress.
+# TYPE node_disk_io_now gauge
+node_disk_io_now{device="dm-0"} 0
+node_disk_io_now{device="sda"} 0
+# HELP node_disk_io_time_seconds_total Total seconds spent doing I/Os.
+# TYPE node_disk_io_time_seconds_total counter
+node_disk_io_time_seconds_total{device="dm-0"} 10
+node_disk_io_time_seconds_total{device="sda"} 10.24
+# HELP node_disk_io_time_weighted_seconds_total The weighted # of seconds spent doing I/Os.
+# TYPE node_disk_io_time_weighted_seconds_total counter
+node_disk_io_time_weighted_seconds_total{device="dm-0"} 12.008000000000001
+node_disk_io_time_weighted_seconds_total{device="sda"} 1.364
+# HELP node_disk_read_bytes_total The total number of bytes read successfully.
+# TYPE node_disk_read_bytes_total counter
+node_disk_read_bytes_total{device="dm-0"} 3.68944128e+08
+node_disk_read_bytes_total{device="sda"} 3.784192e+08
+# HELP node_disk_read_time_seconds_total The total number of seconds spent by all reads.
+# TYPE node_disk_read_time_seconds_total counter
+node_disk_read_time_seconds_total{device="dm-0"} 7.792
+node_disk_read_time_seconds_total{device="sda"} 5.1530000000000005
+# HELP node_disk_reads_completed_total The total number of reads completed successfully.
+# TYPE node_disk_reads_completed_total counter
+node_disk_reads_completed_total{device="dm-0"} 11134
+node_disk_reads_completed_total{device="sda"} 8758
+# HELP node_disk_reads_merged_total The total number of reads merged.
+# TYPE node_disk_reads_merged_total counter
+node_disk_reads_merged_total{device="dm-0"} 0
+node_disk_reads_merged_total{device="sda"} 2689
+# HELP node_disk_write_time_seconds_total This is the total number of seconds spent by all writes.
+# TYPE node_disk_write_time_seconds_total counter
+node_disk_write_time_seconds_total{device="dm-0"} 4.216
+node_disk_write_time_seconds_total{device="sda"} 4.174
+# HELP node_disk_writes_completed_total The total number of writes completed successfully.
+# TYPE node_disk_writes_completed_total counter
+node_disk_writes_completed_total{device="dm-0"} 8700
+node_disk_writes_completed_total{device="sda"} 5114
+# HELP node_disk_writes_merged_total The number of writes merged.
+# TYPE node_disk_writes_merged_total counter
+node_disk_writes_merged_total{device="dm-0"} 0
+node_disk_writes_merged_total{device="sda"} 3651
+# HELP node_disk_written_bytes_total The total number of bytes written successfully.
+# TYPE node_disk_written_bytes_total counter
+node_disk_written_bytes_total{device="dm-0"} 9.2606464e+07
+node_disk_written_bytes_total{device="sda"} 9.1557888e+07
+```
+Для памяти:
+```
+# HELP node_memory_MemAvailable_bytes Memory information field MemAvailable_bytes.
+# TYPE node_memory_MemAvailable_bytes gauge
+node_memory_MemAvailable_bytes 7.1266304e+08
+# HELP node_memory_MemFree_bytes Memory information field MemFree_bytes.
+# TYPE node_memory_MemFree_bytes gauge
+node_memory_MemFree_bytes 3.46230784e+08
+```
+Для сетевых интерфейсов:
+```
+# HELP node_network_address_assign_type address_assign_type value of /sys/class/net/<iface>.
+# TYPE node_network_address_assign_type gauge
+node_network_address_assign_type{device="eth0"} 0
+node_network_address_assign_type{device="eth1"} 0
+node_network_address_assign_type{device="lo"} 0
+# HELP node_network_carrier carrier value of /sys/class/net/<iface>.
+# TYPE node_network_carrier gauge
+node_network_carrier{device="eth0"} 1
+node_network_carrier{device="eth1"} 1
+node_network_carrier{device="lo"} 1
+# HELP node_network_info Non-numeric data from /sys/class/net/<iface>, value is always 1.
+# TYPE node_network_info gauge
+node_network_info{address="00:00:00:00:00:00",broadcast="00:00:00:00:00:00",device="lo",duplex="",ifalias="",operstate="unknown"} 1
+node_network_info{address="08:00:27:9b:b1:41",broadcast="ff:ff:ff:ff:ff:ff",device="eth1",duplex="full",ifalias="",operstate="up"} 1
+node_network_info{address="08:00:27:b1:28:5d",broadcast="ff:ff:ff:ff:ff:ff",device="eth0",duplex="full",ifalias="",operstate="up"} 1
+# HELP node_network_mtu_bytes mtu_bytes value of /sys/class/net/<iface>.
+# TYPE node_network_mtu_bytes gauge
+node_network_mtu_bytes{device="eth0"} 1500
+node_network_mtu_bytes{device="eth1"} 1500
+node_network_mtu_bytes{device="lo"} 65536
+# HELP node_network_receive_bytes_total Network device statistic receive_bytes.
+# TYPE node_network_receive_bytes_total counter
+node_network_receive_bytes_total{device="eth0"} 2.725278e+06
+node_network_receive_bytes_total{device="eth1"} 3273
+node_network_receive_bytes_total{device="lo"} 186220
+# HELP node_network_receive_drop_total Network device statistic receive_drop.
+# TYPE node_network_receive_drop_total counter
+node_network_receive_drop_total{device="eth0"} 0
+node_network_receive_drop_total{device="eth1"} 0
+node_network_receive_drop_total{device="lo"} 0
+# HELP node_network_receive_errs_total Network device statistic receive_errs.
+# TYPE node_network_receive_errs_total counter
+node_network_receive_errs_total{device="eth0"} 0
+node_network_receive_errs_total{device="eth1"} 0
+node_network_receive_errs_total{device="lo"} 0
+# HELP node_network_receive_packets_total Network device statistic receive_packets.
+# TYPE node_network_receive_packets_total counter
+node_network_receive_packets_total{device="eth0"} 10334
+node_network_receive_packets_total{device="eth1"} 21
+node_network_receive_packets_total{device="lo"} 125
+# HELP node_network_speed_bytes speed_bytes value of /sys/class/net/<iface>.
+# TYPE node_network_speed_bytes gauge
+node_network_speed_bytes{device="eth0"} 1.25e+08
+node_network_speed_bytes{device="eth1"} 1.25e+08
+# HELP node_network_transmit_bytes_total Network device statistic transmit_bytes.
+# TYPE node_network_transmit_bytes_total counter
+node_network_transmit_bytes_total{device="eth0"} 685449
+node_network_transmit_bytes_total{device="eth1"} 1956
+node_network_transmit_bytes_total{device="lo"} 186220
+# HELP node_network_transmit_drop_total Network device statistic transmit_drop.
+# TYPE node_network_transmit_drop_total counter
+node_network_transmit_drop_total{device="eth0"} 0
+node_network_transmit_drop_total{device="eth1"} 0
+node_network_transmit_drop_total{device="lo"} 0
+# HELP node_network_transmit_errs_total Network device statistic transmit_errs.
+# TYPE node_network_transmit_errs_total counter
+node_network_transmit_errs_total{device="eth0"} 0
+node_network_transmit_errs_total{device="eth1"} 0
+node_network_transmit_errs_total{device="lo"} 0
+# HELP node_network_transmit_packets_total Network device statistic transmit_packets.
+# TYPE node_network_transmit_packets_total counter
+node_network_transmit_packets_total{device="eth0"} 6840
+node_network_transmit_packets_total{device="eth1"} 26
+node_network_transmit_packets_total{device="lo"} 125
+# HELP node_network_up Value is 1 if operstate is 'up', 0 otherwise.
+# TYPE node_network_up gauge
+node_network_up{device="eth0"} 1
+node_network_up{device="eth1"} 1
+node_network_up{device="lo"} 0
 
+```
 
 ---
 3. Установите в свою виртуальную машину [Netdata](https://github.com/netdata/netdata). Воспользуйтесь [готовыми пакетами](https://packagecloud.io/netdata/netdata/install) для установки (`sudo apt install -y netdata`). После успешной установки:
