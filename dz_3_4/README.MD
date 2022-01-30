@@ -141,6 +141,7 @@ root@vagrant:~# cat /proc/1986/environ
  В окружении процесса можно видеть добавленную переменную из файла _my_node_env1=param_
 
 ---
+
 2. Ознакомьтесь с опциями node_exporter и выводом `/metrics` по-умолчанию. Приведите несколько опций, которые вы бы выбрали для базового мониторинга хоста по CPU, памяти, диску и сети.
 
 _Ответ:_  
@@ -300,6 +301,7 @@ node_network_up{device="lo"} 0
 ```
 
 ---
+
 3. Установите в свою виртуальную машину [Netdata](https://github.com/netdata/netdata). Воспользуйтесь [готовыми пакетами](https://packagecloud.io/netdata/netdata/install) для установки (`sudo apt install -y netdata`). После успешной установки:
     * в конфигурационном файле `/etc/netdata/netdata.conf` в секции [web] замените значение с localhost на `bind to = 0.0.0.0`,
     * добавьте в Vagrantfile проброс порта Netdata на свой локальный компьютер и сделайте `vagrant reload`:
@@ -313,12 +315,27 @@ node_network_up{device="lo"} 0
 
 _Ответ:_  
 
+Задание выполнено:
+>vagrant@vagrant:~$ sudo lsof -i :19999  
+COMMAND PID    USER   FD   TYPE DEVICE SIZE/OFF NODE NAME  
+netdata 643 netdata    4u  IPv4  23044      0t0  TCP *:19999 (LISTEN)  
+netdata 643 netdata   23u  IPv4  33164      0t0  TCP vagrant:19999->_gateway:1690 (ESTABLISHED)  
+
+
+![](img/pic1.png)
 
 ---
+
 4. Можно ли по выводу `dmesg` понять, осознает ли ОС, что загружена не на настоящем оборудовании, а на системе виртуализации?
 
-_Ответ:_  
-
+_Ответ:_ 
+Да в логах она так и пишет, что определена виртуализация.
+```bash
+vagrant@vagrant:~$ dmesg | grep virtu
+[    0.004629] CPU MTRRs all blank - virtualized system.
+[    0.173834] Booting paravirtualized kernel on KVM
+[    3.523541] systemd[1]: Detected virtualization oracle.
+```
 
 ---
 5. Как настроен sysctl `fs.nr_open` на системе по-умолчанию? Узнайте, что означает этот параметр. Какой другой существующий лимит не позволит достичь такого числа (`ulimit --help`)?
