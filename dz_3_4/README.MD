@@ -363,7 +363,7 @@ vagrant@vagrant:~$ ulimit -Sn
 vagrant@vagrant:~$ ulimit -Hn
 1048576
 ```
-В свою очередь оба этих лимита не могут превышать размер параметра `fs.nr_open`
+В свою очередь оба эти лимита не могут превышать размер параметра `fs.nr_open`
 
 ---
 
@@ -371,6 +371,35 @@ vagrant@vagrant:~$ ulimit -Hn
 
 _Ответ:_  
 
+Запускаем в одном терминале процесс в неймспейсе:
+```bash
+root@vagrant:~# unshare -f --pid --mount-proc /bin/sleep 1h
+```
+
+В другом терминале подключаемся к нему через `nsenter`. Видим что для процесса представляется, что он работает под `pid 1`
+```bash
+vagrant@vagrant:~$ sudo -i
+root@vagrant:~# ps -a | grep sleep
+   1693 pts/0    00:00:00 sleep
+root@vagrant:~# nsenter --target 1693 --pid --mount
+root@vagrant:/# ps
+    PID TTY          TIME CMD
+      2 pts/1    00:00:00 bash
+     13 pts/1    00:00:00 ps
+root@vagrant:/# lsof
+COMMAND PID USER   FD   TYPE DEVICE SIZE/OFF    NODE NAME
+sleep     1 root  cwd    DIR  253,0     4096 1703937 /root
+sleep     1 root  rtd    DIR  253,0     4096       2 /
+sleep     1 root  txt    REG  253,0    39256 1836066 /usr/bin/sleep
+sleep     1 root  mem    REG  253,0  3035952 1835290 /usr/lib/locale/locale-archive
+sleep     1 root  mem    REG  253,0  2029224 1841468 /usr/lib/x86_64-linux-gnu/libc-2.31.so
+sleep     1 root  mem    REG  253,0   191472 1841428 /usr/lib/x86_64-linux-gnu/ld-2.31.so
+sleep     1 root    0u   CHR  136,0      0t0       3 /dev/pts/0
+sleep     1 root    1u   CHR  136,0      0t0       3 /dev/pts/0
+sleep     1 root    2u   CHR  136,0      0t0       3 /dev/pts/0
+```
+
+![](img/pic2.png)
 
 ---
 7. Найдите информацию о том, что такое `:(){ :|:& };:`. Запустите эту команду в своей виртуальной машине Vagrant с Ubuntu 20.04 (**это важно, поведение в других ОС не проверялось**). Некоторое время все будет "плохо", после чего (минуты) – ОС должна стабилизироваться. Вызов `dmesg` расскажет, какой механизм помог автоматической стабилизации. Как настроен этот механизм по-умолчанию, и как изменить число процессов, которое можно создать в сессии?
