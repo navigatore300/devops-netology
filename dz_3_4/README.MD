@@ -25,7 +25,7 @@ After=network.target
 Type=simple
 User=node_exporter
 Group=node_exporter
-ExecStart=/usr/local/bin/node_exporter
+ExecStart=/usr/local/bin/node_exporter $EXTRA_OPTS
 
 EnvironmentFile=-/etc/node_exporter/node_env.cfg
 
@@ -128,7 +128,12 @@ Jan 30 09:54:17 vagrant systemd[1]: Stopped Prometheus Node Exporter.
 В unit-файл добавлена строка  
 >EnvironmentFile=/etc/node_exporter/node_env.cfg
 
-для возможности добавления опций к запускаемому процессу через внешний файл /etc/node_exporter/node_env.cfg  
+для возможности добавления опций к запускаемому процессу через внешний файл /etc/node_exporter/node_env.cfg
+В самом файле следующая информация:
+>my_node_env1 = param  
+>EXTRA_OPTS="--log.level=info"
+
+
 
 ```
 ps aux | grep node
@@ -136,9 +141,11 @@ node_ex+    1986  0.6  1.1 715964 11440 ?        Ssl  09:47   0:00 /usr/local/bi
 root        2002  0.0  0.0   6300   740 pts/0    S+   09:47   0:00 grep --color=auto node
 root@vagrant:~# cat /proc/1986/environ
 ```
->LANG=en_US.UTF-8PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/binLOGNAME=node_exporterUSER=node_exporterINVOCATION_ID=05c8edc57eee457790ba106dfd4541edJOURNAL_STREAM=9:31523my_node_env1=param
+>LANG=en_US.UTF-8PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/binLOGNAME=node_exporterUSER=node_exporterINVOCATION_ID=05c8edc57eee457790ba106dfd4541edJOURNAL_STREAM=9:31523my_node_env1=paramEXTRA_OPTS=--log.level=info
 
  В окружении процесса можно видеть добавленную переменную из файла _my_node_env1=param_
+
+ 
 
 ---
 
