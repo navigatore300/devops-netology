@@ -316,16 +316,16 @@ sdc                         8:32   0  2.5G  0 disk
 
 15. Протестируйте целостность файла:
 
-root@vagrant:~# gzip -t /tmp/new/test.gz
-root@vagrant:~# echo $?
-0
+>root@vagrant:~# gzip -t /tmp/new/test.gz  
+>root@vagrant:~# echo $?  
+>0
 
 _Ответ_
-
+```
 root@vagrant:/tmp/new# gzip -t /tmp/new/test.gz
 root@vagrant:/tmp/new# echo $?
 0
-
+```
 ---
 
 16. Используя pvmove, переместите содержимое PV с RAID0 на RAID1.
@@ -368,9 +368,9 @@ root@vagrant:/tmp/new# dmesg | grep md0 | tail -n 10
 
 19. Протестируйте целостность файла, несмотря на "сбойный" диск он должен продолжать быть доступен:
 
-root@vagrant:~# gzip -t /tmp/new/test.gz  
-root@vagrant:~# echo $?
-0
+>root@vagrant:~# gzip -t /tmp/new/test.gz  
+>root@vagrant:~# echo $?
+>0
 
 _Ответ_
 ```
