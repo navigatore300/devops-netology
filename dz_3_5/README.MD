@@ -342,7 +342,10 @@ root@vagrant:/tmp/new# pvmove -n 100m-lv /dev/md1 /dev/md0
 
 _Ответ_
 
-
+```angular2html
+root@vagrant:/tmp/new# mdadm --fail /dev/md0 /dev/sdc1
+mdadm: set /dev/sdc1 faulty in /dev/md0
+```
 
 ---
 
@@ -350,19 +353,31 @@ _Ответ_
 
 _Ответ_
 
-
+```angular2html
+root@vagrant:/tmp/new# dmesg | grep md0 | tail -n 10
+[ 4172.881226] md/raid1:md0: not clean -- starting background reconstruction
+[ 4172.881228] md/raid1:md0: active with 2 out of 2 mirrors
+[ 4172.881242] md0: detected capacity change from 0 to 2144337920
+[ 4172.882900] md: resync of RAID array md0
+[ 4183.462885] md: md0: resync done.
+[32099.678337] md/raid1:md0: Disk failure on sdc1, disabling device.
+               md/raid1:md0: Operation continuing on 1 devices.
+```
 
 ---
 
 19. Протестируйте целостность файла, несмотря на "сбойный" диск он должен продолжать быть доступен:
 
-root@vagrant:~# gzip -t /tmp/new/test.gz
+root@vagrant:~# gzip -t /tmp/new/test.gz  
 root@vagrant:~# echo $?
 0
 
 _Ответ_
-
-
+```
+root@vagrant:/tmp/new# gzip -t /tmp/new/test.gz
+root@vagrant:/tmp/new# echo $?
+0
+```
 
 ---
 
@@ -370,6 +385,6 @@ _Ответ_
 
 _Ответ_
 
-
+Выполнено.
 
 ---
