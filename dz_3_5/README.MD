@@ -153,7 +153,7 @@ Syncing disks.
 6. Соберите mdadm RAID1 на паре разделов 2 Гб.
 
 _Ответ_
-```
+```bash
 root@vagrant:~# mdadm --create /dev/md0 --level=1 --raid-devices=2 /dev/sd[bc]1
 mdadm: Note: this array has metadata at the start and
     may not be suitable as a boot device.  If you plan to
@@ -164,7 +164,6 @@ Continue creating array? y
 mdadm: Defaulting to version 1.2 metadata
 mdadm: array /dev/md0 started.
 ```
-
 ---
 
 7. Соберите mdadm RAID0 на второй паре маленьких разделов.
@@ -175,31 +174,58 @@ root@vagrant:~# mdadm --create /dev/md1 --level=0 --raid-devices=2 /dev/sd[bc]2
 mdadm: Defaulting to version 1.2 metadata
 mdadm: array /dev/md1 started.
 ```
-
-
 ---
 
 8. Создайте 2 независимых PV на получившихся md-устройствах.
 
 _Ответ_
+```
+root@vagrant:~# pvcreate /dev/md0
+  Physical volume "/dev/md0" successfully created.
 
+root@vagrant:~# pvcreate /dev/md1
+  Physical volume "/dev/md1" successfully created.
 
-
+root@vagrant:~# pvs
+  PV         VG        Fmt  Attr PSize    PFree
+  /dev/md0             lvm2 ---    <2.00g   <2.00g
+  /dev/md1             lvm2 ---  1018.00m 1018.00m
+  /dev/sda3  ubuntu-vg lvm2 a--   <63.00g  <31.50g
+```
 ---
 
 9. Создайте общую volume-group на этих двух PV.
 
 _Ответ_
 
+```
+root@vagrant:~# vgcreate my_vg /dev/md0 /dev/md1
+  Volume group "my_vg" successfully created
 
-
+root@vagrant:~# vgs
+  VG        #PV #LV #SN Attr   VSize   VFree
+  my_vg       2   0   0 wz--n-  <2.99g  <2.99g
+  ubuntu-vg   1   1   0 wz--n- <63.00g <31.50g
+```
 ---
 
 10. Создайте LV размером 100 Мб, указав его расположение на PV с RAID0.
 
 _Ответ_
+```
+root@vagrant:~# lvcreate -L 100m -n 100m-lv my_vg /dev/md1
+  Logical volume "100m-lv" created.
 
-
+root@vagrant:~# lvs
+  LV        VG        Attr       LSize   Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  100m-lv   my_vg     -wi-a----- 100.00m
+  ubuntu-lv ubuntu-vg -wi-ao----  31.50g
+  
+root@vagrant:~# lvs -o +devices
+  LV        VG        Attr       LSize   Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert Devices
+  100m-lv   my_vg     -wi-a----- 100.00m                                                     /dev/md1(0)
+  ubuntu-lv ubuntu-vg -wi-ao----  31.50g                                                     /dev/sda3(0)
+```
 
 ---
 
@@ -207,31 +233,84 @@ _Ответ_
 
 _Ответ_
 
+```
+root@vagrant:~# mkfs.ext4 -L LV_EXT4 -m 1 /dev/mapper/my_vg-100m--lv
+mke2fs 1.45.5 (07-Jan-2020)
+Creating filesystem with 25600 4k blocks and 25600 inodes
 
-
+Allocating group tables: done
+Writing inode tables: done
+Creating journal (1024 blocks): done
+Writing superblocks and filesystem accounting information: done
+```
 ---
 
 12. Смонтируйте этот раздел в любую директорию, например, /tmp/new.
 
 _Ответ_
 
+```angular2html
+root@vagrant:~# mount /dev/mapper/my_vg-100m--lv /tmp/new
 
+root@vagrant:~# mount | grep new
+/dev/mapper/my_vg-100m--lv on /tmp/new type ext4 (rw,relatime,stripe=256)
+```
 
 ---
 
 13. Поместите туда тестовый файл, например wget https://mirror.yandex.ru/ubuntu/ls-lR.gz -O /tmp/new/test.gz.
 
 _Ответ_
+```
+root@vagrant:~# cd /tmp/new/
 
+root@vagrant:/tmp/new# wget https://mirror.yandex.ru/ubuntu/ls-lR.gz -O /tmp/new/test.gz
+--2022-02-04 18:24:44--  https://mirror.yandex.ru/ubuntu/ls-lR.gz
+Resolving mirror.yandex.ru (mirror.yandex.ru)... 213.180.204.183, 2a02:6b8::183
+Connecting to mirror.yandex.ru (mirror.yandex.ru)|213.180.204.183|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 22166357 (21M) [application/octet-stream]
+Saving to: ‘/tmp/new/test.gz’
+/tmp/new/test.gz           100%[======================================>]  21.14M  8.41MB/s    in 2.5s
+2022-02-04 18:24:47 (8.41 MB/s) - ‘/tmp/new/test.gz’ saved [22166357/22166357]
 
-
+root@vagrant:/tmp/new# ls
+lost+found  test.gz
+```
 ---
 
 14. Прикрепите вывод lsblk.
 
 _Ответ_
 
-
+```angular2html
+root@vagrant:/tmp/new# lsblk
+NAME                      MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINT
+loop0                       7:0    0 55.4M  1 loop  /snap/core18/2128
+loop1                       7:1    0 32.3M  1 loop  /snap/snapd/12704
+loop2                       7:2    0 70.3M  1 loop  /snap/lxd/21029
+loop3                       7:3    0 55.5M  1 loop  /snap/core18/2284
+loop4                       7:4    0 43.4M  1 loop  /snap/snapd/14549
+loop5                       7:5    0 61.9M  1 loop  /snap/core20/1328
+loop6                       7:6    0 67.2M  1 loop  /snap/lxd/21835
+sda                         8:0    0   64G  0 disk
+├─sda1                      8:1    0    1M  0 part
+├─sda2                      8:2    0    1G  0 part  /boot
+└─sda3                      8:3    0   63G  0 part
+  └─ubuntu--vg-ubuntu--lv 253:0    0 31.5G  0 lvm   /
+sdb                         8:16   0  2.5G  0 disk
+├─sdb1                      8:17   0    2G  0 part
+│ └─md0                     9:0    0    2G  0 raid1
+└─sdb2                      8:18   0  511M  0 part
+  └─md1                     9:1    0 1018M  0 raid0
+    └─my_vg-100m--lv      253:1    0  100M  0 lvm   /tmp/new
+sdc                         8:32   0  2.5G  0 disk
+├─sdc1                      8:33   0    2G  0 part
+│ └─md0                     9:0    0    2G  0 raid1
+└─sdc2                      8:34   0  511M  0 part
+  └─md1                     9:1    0 1018M  0 raid0
+    └─my_vg-100m--lv      253:1    0  100M  0 lvm   /tmp/new
+```
 
 ---
 
@@ -243,16 +322,20 @@ root@vagrant:~# echo $?
 
 _Ответ_
 
-
+root@vagrant:/tmp/new# gzip -t /tmp/new/test.gz
+root@vagrant:/tmp/new# echo $?
+0
 
 ---
 
 16. Используя pvmove, переместите содержимое PV с RAID0 на RAID1.
 
 _Ответ_
-
-
-
+```
+root@vagrant:/tmp/new# pvmove -n 100m-lv /dev/md1 /dev/md0
+  /dev/md1: Moved: 16.00%
+  /dev/md1: Moved: 100.00%
+```
 ---
 
 17. Сделайте --fail на устройство в вашем RAID1 md.
