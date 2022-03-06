@@ -174,8 +174,59 @@ Paths: (22 available, best #10, table default)
 
 ```
 
-2. Создайте dummy0 интерфейс в Ubuntu. Добавьте несколько статических маршрутов. Проверьте таблицу маршрутизации.
+2. Создайте dummy0 интерфейс в Ubuntu. Добавьте несколько статических маршрутов. Проверьте таблицу маршрутизации.  
 
+Включаем загрузку модуля при загрузке:  
+```
+echo "dummy" > /etc/modules-load.d/modules.conf
+echo "options dummy" > /etc/modprobe.d/dummy.conf
+```
+Создаем виртуальный интерфейс в linux с помощью systemd-networkd:  
+```
+Файл /etc/systemd/network/10-dummy0.netdev
+
+[NetDev]
+Name=dummy0
+Kind=dummy
+
+Файл /etc/systemd/network/20-dummy0.network
+
+[Match]
+Name=dummy0
+
+[Network]
+Address=192.168.200.1/24
+```
+После перезагрузки получаем:  
+```
+root@vagrant:~# ip -br a  
+
+lo               UNKNOWN        127.0.0.1/8 ::1/128  
+eth0             UP             10.0.2.15/24 fe80::a00:27ff:feb1:285d/64  
+dummy0           UNKNOWN        192.168.200.1/24 fe80::d033:e7ff:fe80:c5a6/64  
+```
+Добавляем статический маршрут при поднятии интерфейса dummy
+В файл `/etc/systemd/network/20-dummy0.network` добавляем строки  
+```bash
+[Route]
+Gateway=192.168.200.254
+Destination=10.10.10.0/24
+GatewayOnlink=yes
+```
+Теперь после перезапуска сети `systemctl restart systemd-networkd` видим что добавился статический марштут.
+```bash
+root@vagrant:/etc/systemd/network# ip -br r
+
+default via 10.0.2.2 dev eth0 proto dhcp src 10.0.2.15 metric 100
+10.0.2.0/24 dev eth0 proto kernel scope link src 10.0.2.15
+10.0.2.2 dev eth0 proto dhcp scope link src 10.0.2.15 metric 100
+10.10.10.0/24 via 192.168.200.254 dev dummy0 proto static onlink
+192.168.200.0/24 dev dummy0 proto kernel scope link src 192.168.200.1
+
+root@vagrant:/etc/systemd/network# ip -br r | grep static
+
+10.10.10.0/24 via 192.168.200.254 dev dummy0 proto static onlink
+```
 3. Проверьте открытые TCP порты в Ubuntu, какие протоколы и приложения используют эти порты? Приведите несколько примеров.
 
 4. Проверьте используемые UDP сокеты в Ubuntu, какие протоколы и приложения используют эти порты?
