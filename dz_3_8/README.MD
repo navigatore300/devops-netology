@@ -250,6 +250,20 @@ LISTEN   0        128                  [::]:22                 [::]:*       user
 
 4. Проверьте используемые UDP сокеты в Ubuntu, какие протоколы и приложения используют эти порты?
 
+По аналогии с прыдущим заданием параметр `u` выводит UTP, `a` в любом состоянии.
+```angular2html
+root@vagrant:~# ss -uap
+State    Recv-Q   Send-Q      Local Address:Port       Peer Address:Port   Process
+UNCONN   0        0           127.0.0.53%lo:domain          0.0.0.0:*       users:(("systemd-resolve",pid=616,fd=12))
+UNCONN   0        0          10.0.2.15%eth0:bootpc          0.0.0.0:*       users:(("systemd-network",pid=1148,fd=22))
+
+root@vagrant:~# ss -unap
+State    Recv-Q   Send-Q      Local Address:Port       Peer Address:Port   Process
+UNCONN   0        0           127.0.0.53%lo:53              0.0.0.0:*       users:(("systemd-resolve",pid=616,fd=12))
+UNCONN   0        0          10.0.2.15%eth0:68              0.0.0.0:*       users:(("systemd-network",pid=1148,fd=22))
+```
+53 - DNS, 68 - BOOTP
+
 5. Используя diagrams.net, создайте L3 диаграмму вашей домашней сети или любой другой сети, с которой вы работали. 
 
  ---
