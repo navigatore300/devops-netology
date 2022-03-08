@@ -229,6 +229,25 @@ root@vagrant:/etc/systemd/network# ip -br r | grep static
 ```
 3. Проверьте открытые TCP порты в Ubuntu, какие протоколы и приложения используют эти порты? Приведите несколько примеров.
 
+Выведем информацию о всех tcp портах в режиме прослушивания:
+```
+root@vagrant:~# ss -tl
+State        Recv-Q       Send-Q               Local Address:Port                 Peer Address:Port       Process
+LISTEN       0            4096                 127.0.0.53%lo:domain                    0.0.0.0:*
+LISTEN       0            128                        0.0.0.0:ssh                       0.0.0.0:*
+LISTEN       0            128                           [::]:ssh                          [::]:*
+```
+То же без определеня службы, и с указанием процесса:
+```angular2html
+root@vagrant:~# root@vagrant:~# ss -tlnp
+State    Recv-Q   Send-Q      Local Address:Port       Peer Address:Port   Process
+LISTEN   0        4096        127.0.0.53%lo:53              0.0.0.0:*       users:(("systemd-resolve",pid=616,fd=13))
+LISTEN   0        128               0.0.0.0:22              0.0.0.0:*       users:(("sshd",pid=676,fd=3))
+LISTEN   0        128                  [::]:22                 [::]:*       users:(("sshd",pid=676,fd=4))
+```
+Как видно в системе процесс systemd-resolve слушает на порту 53, демон sshd на порту 22.
+Из вывода первой команды видно, что на 53 порту работает служба DNS. На 22 порту служба SSH.
+
 4. Проверьте используемые UDP сокеты в Ubuntu, какие протоколы и приложения используют эти порты?
 
 5. Используя diagrams.net, создайте L3 диаграмму вашей домашней сети или любой другой сети, с которой вы работали. 
