@@ -29,4 +29,13 @@
 
 ![](img/pic6.png)
 
-7. Соберите дамп трафика утилитой tcpdump в формате pcap, 100 пакетов. Откройте файл pcap в Wireshark.
+7. Соберите дамп трафика утилитой tcpdump в формате pcap, 100 пакетов. Откройте файл pcap в Wireshark.  
+
+```angular2html
+root@vagrant:~# tcpdump -nnei any -c 100 -w 100packets.pcap
+tcpdump: listening on any, link-type LINUX_SLL (Linux cooked v1), capture size 262144 bytes
+100 packets captured
+155 packets received by filter
+0 packets dropped by kernel
+```
+![](img/pic7.png)
