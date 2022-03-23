@@ -50,7 +50,8 @@ do
 	if (($? != 0))
 	then
 		date >> curl.log
-	else break 
+	else 
+	    break 
 	fi
 done
 ```
