@@ -13,6 +13,25 @@
 ![](img/pic3_1.png)  
 ![](img/pic3_2.png)
 
+Генерация ключа:  
+```
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+-keyout /etc/ssl/private/apache-selfsigned.key \
+-out /etc/ssl/certs/apache-selfsigned.crt \
+-subj "/C=RU/ST=Moscow/L=Moscow/O=Company Name/OU=Org/CN=www.vagrant-example.com"
+```
+
+Файл конфигурации:
+```angular2html
+<VirtualHost *:443>
+   ServerName www.vagrant-example.com
+   DocumentRoot /var/www/www.vagrant-example.com
+   SSLEngine on
+   SSLCertificateFile /etc/ssl/certs/apache-selfsigned.crt
+   SSLCertificateKeyFile /etc/ssl/private/apache-selfsigned.key
+</VirtualHost>
+```
+
 4. Проверьте на TLS уязвимости произвольный сайт в интернете (кроме сайтов МВД, ФСБ, МинОбр, НацБанк, РосКосмос, РосАтом, РосНАНО и любых госкомпаний, объектов КИИ, ВПК ... и тому подобное).
 
 Да есть проблемки, Займемся ).
