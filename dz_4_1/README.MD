@@ -61,7 +61,25 @@ done
 
 ### Ваш скрипт:
 ```bash
-???
+#!/bin/bash
+declare -i n=5
+declare -i i=1
+
+while [ $i -le $n ]
+do
+    for host in 192.168.0.1 172.194.222.113 87.250.250.242
+    do
+        nc -zw1 $host 80
+        if [ $? -eq 0 ]
+        then
+             echo `date` $host UP >> ping.log
+        else
+             echo `date` $host DOWN >> ping.log
+        fi
+    done
+sleep 1
+i+=1
+done
 ```
 
 ## Обязательная задача 4
