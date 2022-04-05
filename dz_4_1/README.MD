@@ -87,7 +87,22 @@ done
 
 ### Ваш скрипт:
 ```bash
-???
+#!/bin/bash
+while [ 1==1 ]
+do
+    for host in 192.168.0.1 172.194.222.113 87.250.250.242
+    do
+        nc -zw1 $host 80
+        if [ $? -eq 1 ]
+        then
+             echo $host >> error
+             break 2
+        else
+             echo `date` $host UP >> ping.log
+        fi
+    done
+sleep 1
+done
 ```
 
 ## Дополнительное задание (со звездочкой*) - необязательно к выполнению
