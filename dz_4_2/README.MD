@@ -76,12 +76,57 @@ Process finished with exit code 0
 
 ### Ваш скрипт:
 ```python
-???
+#!/usr/bin/env python3
+
+import os
+import sys
+import subprocess
+import re
+
+try:
+    path = sys.argv[1]
+except IndexError:
+    path = "~/PycharmProjects/devops-netology"
+
+resolved_path = os.path.expanduser(path)
+
+try:
+    result_os = subprocess.Popen(["git", "status", "--porcelain"], stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT, cwd=resolved_path, text=True).communicate()[0].split('\n')
+except FileNotFoundError:
+    print(
+        f'Не могу найти папку {path}'
+    )
+    exit()
+
+if result_os[0].find('fatal:') >= 0:
+    print(
+        f'В папке {resolved_path} нет git репозитория. Поищите в другой папке.')
+    exit()
+
+list = {"M": "modified", "R": "renamed", "\?": "untracked"}
+
+for result in result_os:
+    for element in list.keys():
+        regexp = re.compile(r"^ *" + element + "{1,2} *")
+        if regexp.search(result):
+            prepare_result = re.sub(regexp, '', result).split(' -> ')
+            if list[element] == 'renamed':
+                print(
+                    f'{list[element]}:\t {os.path.join(resolved_path, prepare_result[1])} <- {prepare_result[0]}')
+            else:
+                print(
+                    f'{list[element]}:\t {os.path.join(resolved_path, prepare_result[0])}')
 ```
 
 ### Вывод скрипта при запуске при тестировании:
 ```
-???
+/usr/bin/python3.8 /snap/pycharm-professional/278/plugins/python/helpers/pydev/pydevd.py --multiproc --qt-support=auto --client 127.0.0.1 --port 41877 --file /home/userr/PycharmProjects/devops-netology/dz_4_2/1.py
+Connected to pydev debugger (build 213.7172.26)
+untracked:	 /home/userr/PycharmProjects/devops-netology/.idea/
+untracked:	 /home/userr/PycharmProjects/devops-netology/dz_4_2/1.py
+
+Process finished with exit code 0
 ```
 
 ## Обязательная задача 4
@@ -89,12 +134,35 @@ Process finished with exit code 0
 
 ### Ваш скрипт:
 ```python
-???
+# /usr/bin/env python3
+
+import socket
+import time
+
+hosts = {"drive.google.com": {"ipv4": "192.168.0.1"}, "mail.google.com": {
+    "ipv4": "172.16.0.1"}, "google.com": {"ipv4": "10.0.0.1"}}
+
+while True:
+    for host in hosts.keys():
+        cur_ip = hosts[host]["ipv4"]
+        check_ip = socket.gethostbyname(host)
+        if check_ip != cur_ip:
+            print(f"""[ERROR] {host} IP mismatch: {cur_ip} {check_ip}""")
+            hosts[host]["ipv4"] = check_ip
+        else:
+            print(f"""{host} - {cur_ip}""")
+    time.sleep(2)
 ```
 
 ### Вывод скрипта при запуске при тестировании:
 ```
-???
+/usr/bin/python3.8 /home/userr/PycharmProjects/devops-netology/dz_4_2/2.py
+[ERROR] drive.google.com IP mismatch: 192.168.0.1 74.125.131.194
+[ERROR] mail.google.com IP mismatch: 172.16.0.1 216.58.210.133
+[ERROR] google.com IP mismatch: 10.0.0.1 216.58.209.174
+drive.google.com - 74.125.131.194
+mail.google.com - 216.58.210.133
+google.com - 216.58.209.174
 ```
 
 ## Дополнительное задание (со звездочкой*) - необязательно к выполнению
