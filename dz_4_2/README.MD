@@ -64,7 +64,11 @@ for result in result_os.split('\n'):
 
 ### Вывод скрипта при запуске при тестировании:
 ```
-???
+/usr/bin/python3.8 /home/userr/PycharmProjects/devops-netology/dz_4_2/test.py
+/home/userr/PycharmProjects/devops-netology/dz_4_2/script0.py
+/home/userr/PycharmProjects/devops-netology/dz_4_2/test.py
+
+Process finished with exit code 0
 ```
 
 ## Обязательная задача 3
