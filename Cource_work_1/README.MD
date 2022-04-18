@@ -1,5 +1,4 @@
-
-#_Виртуальная машина №1_
+#Виртуальная машина №1
 - Разворачиваем виртуалку при помощи Vagrant (UBUNTU-20.04)
 ```commandline
 Vagrant.configure("2") do |config|
