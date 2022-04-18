@@ -1,6 +1,21 @@
-Разворачивает витруалку при поиощи Vagrant (UBUNTU-20.04)
+
+#_Виртуальная машина №1_
+- Разворачиваем виртуалку при помощи Vagrant (UBUNTU-20.04)
+```commandline
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/ubuntu-20.04"
+  config.vm.network "forwarded_port", guest: 80, host: 80
+  config.vm.network "forwarded_port", guest: 8200, host: 8200
+  config.vm.network "forwarded_port", guest: 443, host: 443
+  config.vm.network "private_network", ip: "192.168.33.10"
+
+  config.vm.provider "virtualbox" do |vb|
+     vb.memory = "2096"
+  end
+end
+```
 ---
-Настраиваем фаервол ufw
+- Настраиваем фаервол ufw
 ```
 ufw default deny incoming
 ufw default allow outgoing
@@ -11,28 +26,26 @@ ufw allow from 127.0.0.1 to any
 ufw enable
 ```
 ---
-Установка допольнительных пакетов которые понадобятся
+- Установка допольнительных пакетов которые понадобятся
 ```
 apt-get install jq
 apt-get install wget chrony curl apt-transport-https
 ```
 ---
-Настройка времени
+- Настройка времени
 ```
 timedatectl set-timezone Europe/Moscow
 systemctl enable chrony
 systemctl restart chrony
 ```
-
 ---
-Установка Vault
+- Установка Vault
 ```
 curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
 sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
 sudo apt-get update && sudo apt-get install vault
 ```
----
-Редактируем настройки Vault на работу по http
+Редактируем настройки Vault на работу по http:
 ```
 nano /etc/vault.d/vault.hcl
 listener "tcp" {
@@ -60,10 +73,6 @@ Unseal Key 5: n3MtFg5jFxKPc4PWGxCIqIVvite2ACYnCrDhbit3+ebK
 
 Initial Root Token: hvs.hw4BrcrmL6sFIvnaTRhLHUg8
 ```
-Авторизуемся по команде `vault login` или экспортируем в переменную окружения:  
-
-`export VAULT_TOKEN=hvs.hw4BrcrmL6sFIvnaTRhLHUg8`
-
 Создаем скрипт для разброкировки хранилища при загрузке (не безопасно, но удобно):
 ```
 mkdir /scripts
@@ -113,6 +122,12 @@ systemctl daemon-reload
 ```
 systemctl enable vault-unseal
 ```
+---
+- Настройка pki и генерация корневых сертификатов  
+
+Авторизуемся по команде `vault login` или экспортируем в переменную окружения:  
+
+`export VAULT_TOKEN=hvs.hw4BrcrmL6sFIvnaTRhLHUg8`
 
 Включаем работу с сертификатами и создаем корневой сертификат, промежуточный, и сертификат сервера.
 
@@ -278,7 +293,7 @@ update-ca-certificates
 cp vault.maximden.ru.crt.pem /opt/vault/tls/tls.crt
 cp vault.maximden.ru.crt.key /opt/vault/tls/tls.key
 ```
-правим конфиг:  
+правим конфиг Vault:  
 `nano /etc/vault.d/vault.hcl`
 ```
 listener "tcp" {
@@ -328,7 +343,7 @@ path "pki_int_ca/issue/maximden-dot-ru-server" {
 }
 EOF
 ```
-Создаем пользователя и назначаем политику:
+Создаем пользователя и назначаем на него политику:
 
 `vault token create -policy=www-maximden-ru-server-policy`
 ```commandline
@@ -343,8 +358,8 @@ token_policies       ["default" "www-maximden-ru-server-policy"]
 identity_policies    []
 policies             ["default" "www-maximden-ru-server-policy"]
 ```
-Логинимся под созданным пользователем:
- vault login
+Логинимся под созданным пользователем:  
+ `vault login`
 
 Генерируем сертификат для сайта www.maximden.ru
 ```
@@ -414,3 +429,70 @@ server {
 
 Заходим на адрес предварительно прописав его в hosts:  
 ![](www.png)
+---
+# Виртуальная машина №2
+##Генерация и обновление сертификата сайта.
+
+Создаем вторую виртуальную машину.  
+```commandline
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "bento/ubuntu-20.04"
+  config.vm.network "forwarded_port", guest: 80, host: 81
+  config.vm.network "forwarded_port", guest: 8200, host: 8201
+  config.vm.network "forwarded_port", guest: 443, host: 444
+  config.vm.network "private_network", ip: "192.168.33.11"
+
+  config.vm.provider "virtualbox" do |vb|
+     vb.memory = "2096"
+  end
+end
+```
+Устанавливаем vault для использования его как клиента подключения из консоли.  
+Устанавливаем nginx.  
+Добавляем наш корневой и промежуточный сертификаты в доверенные.  
+Добавляем в hosts имя и адрес по которому находиться первая машина с vault.  
+Создаем папку /www_cert в ней будет находиться скрипт обновления и сгенерированные сертификаты.  
+
+Скритп создания нового сертификата:  
+```commandline
+#!/bin/bash
+
+site_name="www.maximden.ru"
+dir_name="maximden-dot-ru"
+export VAULT_ADDR=https://vault.maximden.ru:8200
+export VAULT_TOKEN=hvs.CAESIGi39_9OAAedZcqbrSiGf08EK8yHdF1E1LQ-EAq5meKvGh4KHGh2cy5EMFdTZUZ4cGFMMktLYkMzTHpkcDdQVGM
+
+# Create cert, 1 hour
+vault write -format=json pki_int_ca/issue/$dir_name-server \
+  common_name="$site_name" \
+  alt_names="$site_name" \
+  ttl="1h" > $site_name.crt
+
+# save cert
+cat $site_name.crt | jq -r .data.certificate > cert.pem
+cat $site_name.crt | jq -r .data.issuing_ca >> cert.pem
+cat $site_name.crt | jq -r .data.private_key > cert.key
+log="Script: renew_cer.sh generate a certificatecate: "
+log+="$( cat $site_name.crt | jq -r .data.serial_number)"
+logger $log
+rm $site_name.crt
+unset VAULT_ADDR VAULT_TOKEN site_name dir_name log
+
+systemctl restart nginx
+```
+Изменяем настройки nginx для работы сайта по https и указываем путь где будет находиться сгенерированный сертификат.
+```commandline
+        server_name www.maximden.ru;
+        ssl_certificate     /www_cert/cert.pem;
+        ssl_certificate_key /www_cert/cert.key;
+        ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
+        ssl_ciphers         HIGH:!aNULL:!MD5;
+```
+Создаем расписание в cron для периодического обновления сертификата. Каждую минуту для наглядности.
+```
+*/1 * * * * /www_cert/renew_cert.sh
+```
+Результат работы на скрине:  
+
+![](cron.png)
