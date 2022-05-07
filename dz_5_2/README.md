@@ -47,6 +47,33 @@ _Ответ :_
 
 *Приложить вывод команд установленных версий каждой из программ, оформленный в markdown.*
 
+
+- VirtualBox Install
+```
+sudo touch /etc/apt/sources.list.d/oracle-virtualbox.list
+sudo echo "deb https://download.virtualbox.org/virtualbox/debian buster contrib" >> deb https://download.virtualbox.org/virtualbox/debian buster contrib
+sudo wget -q https://www.virtualbox.org/download/oracle_vbox_2016.asc -O- | sudo apt-key add -
+sudo apt-get update
+sudo apt-get install -y gnupg2
+sudo apt-get dist-upgrade
+sudo reboot
+sudo apt-get install linux-headers-$(uname -r)
+sudo apt-get install virtualbox-6.1
+```
+- Vagrant Install
+```
+apt update
+apt install curl apt-add-repository software-properties-common
+curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+apt update && sudo apt install vagrant
+```
+- Ansible Install
+```
+apt update
+apt install ansible
+```
+![](img/img.png)
 ## Задача 4 (*)
 
 Воспроизвести практическую часть лекции самостоятельно.
