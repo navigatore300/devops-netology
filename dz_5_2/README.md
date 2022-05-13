@@ -70,10 +70,9 @@ apt update && sudo apt install vagrant
 ```
 - Ansible Install
 ```
-apt update
-apt install ansible
+pip3 install ansible
 ```
-![](img/img.png)
+![](img/dz5_2_pic1.png)
 ## Задача 4 (*)
 
 Воспроизвести практическую часть лекции самостоятельно.
@@ -83,3 +82,6 @@ apt install ansible
 ```
 docker ps
 ```
+
+_Ответ :_
+![](img/dz5_2_pic2.png)
