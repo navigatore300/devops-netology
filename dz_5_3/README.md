@@ -10,8 +10,8 @@
 - создайте свой репозиторий на https://hub.docker.com;
 - выберете любой образ, который содержит веб-сервер Nginx;
 - создайте свой fork образа;
-- реализуйте функциональность:
-запуск веб-сервера в фоне с индекс-страницей, содержащей HTML-код ниже:
+  - реализуйте функциональность:
+  запуск веб-сервера в фоне с индекс-страницей, содерnano Vaжащей HTML-код ниже:
 ```
 <html>
 <head>
@@ -23,6 +23,40 @@ Hey, Netology
 </html>
 ```
 Опубликуйте созданный форк в своем репозитории и предоставьте ответ в виде ссылки на https://hub.docker.com/username_repo.
+
+---
+
+_Ответ:_  
+
+`nano index.html`  
+```angular2html
+<meta charset="UTF-8">
+<html>
+<head>
+Hey, Netology
+</head>
+<body>
+<h1>I’m DevOps Engineer!</h1>
+</body>
+</html>
+```
+`nano Dockerfile`  
+```angular2html
+FROM nginx:stable
+COPY index.html /usr/share/nginx/html/index.html
+```
+`docker build -t maximden/nginx:v1 .`  
+`docker run --rm -d --name my_web -p 80:80 maximden/nginx:v1`  
+
+![](img/1.png)
+
+`docker login`  
+`docker tag maximden/nginx:v1 maximden/devops.netology:nginx_my`  
+`docker push maximden/devops.netology:nginx_my`  
+
+Ссылка на образ в Docker Hub:  https://hub.docker.com/r/maximden/devops.netology
+
+---
 
 ## Задача 2
 
