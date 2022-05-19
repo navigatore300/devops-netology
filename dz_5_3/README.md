@@ -78,6 +78,14 @@ COPY index.html /usr/share/nginx/html/index.html
 - MongoDB, как основное хранилище данных для java-приложения;
 - Gitlab сервер для реализации CI/CD процессов и приватный (закрытый) Docker Registry.
 
+---
+
+_Ответ:_
+
+
+
+---
+
 ## Задача 3
 
 - Запустите первый контейнер из образа ***centos*** c любым тэгом в фоновом режиме, подключив папку ```/data``` из текущей рабочей директории на хостовой машине в ```/data``` контейнера;
@@ -86,17 +94,68 @@ COPY index.html /usr/share/nginx/html/index.html
 - Добавьте еще один файл в папку ```/data``` на хостовой машине;
 - Подключитесь во второй контейнер и отобразите листинг и содержание файлов в ```/data``` контейнера.
 
+---
+
+_Ответ:_  
+
+
+```
+vagrant@server1:~/docker_test$ docker run -it --rm -d --name centos -v $(pwd)/data:/data centos:centos7.9.2009
+09ef0a7b5466d995fae3ad6f39972b4d19bfe315d8dc94c44294dffcada87b7f
+vagrant@server1:~/docker_test$ docker ps
+CONTAINER ID   IMAGE                   COMMAND       CREATED         STATUS         PORTS     NAMES
+09ef0a7b5466   centos:centos7.9.2009   "/bin/bash"   5 seconds ago   Up 4 seconds             centos
+vagrant@server1:~/docker_test$ man docker run
+vagrant@server1:~/docker_test$ docker run -it --rm -d --name debian -v $(pwd)/data:/data debian:stable
+Unable to find image 'debian:stable' locally
+stable: Pulling from library/debian
+13597bb7b8ec: Pull complete
+Digest: sha256:bdcb21b41fe077ff21d84d707bf106b0a896b2adfbafa2ee8d5f4ad470608b9c
+Status: Downloaded newer image for debian:stable
+68c8d2b3021b47ca9931ee5e78b50112c675b71528c0dc59e3e767517a009afc
+vagrant@server1:~/docker_test$ docker ps
+CONTAINER ID   IMAGE                   COMMAND       CREATED         STATUS         PORTS     NAMES
+68c8d2b3021b   debian:stable           "bash"        9 seconds ago   Up 6 seconds             debian
+09ef0a7b5466   centos:centos7.9.2009   "/bin/bash"   2 minutes ago   Up 2 minutes             centos
+vagrant@server1:~/docker_test$ docker exec -it centos bash
+[root@09ef0a7b5466 /]# echo "Text saved from CentOS" > /data/centos.txt
+[root@09ef0a7b5466 /]# exit
+exit
+vagrant@server1:~/docker_test$ cd data/
+vagrant@server1:~/docker_test/data$ ls
+centos.txt
+vagrant@server1:~/docker_test/data$ echo "Text from HOST" > host.txt
+vagrant@server1:~/docker_test/data$ ls
+centos.txt  host.txt
+vagrant@server1:~/docker_test/data$ docker exec -it debian bash
+root@68c8d2b3021b:/# ls -la /data
+total 16
+drwxrwxr-x 2 1000 1000 4096 May 19 13:33 .
+drwxr-xr-x 1 root root 4096 May 19 13:31 ..
+-rw-r--r-- 1 root root   23 May 19 13:32 centos.txt
+-rw-rw-r-- 1 1000 1000   15 May 19 13:33 host.txt
+root@68c8d2b3021b:/# exit
+exit
+vagrant@server1:~/docker_test/data$ docker ps
+CONTAINER ID   IMAGE                   COMMAND       CREATED         STATUS         PORTS     NAMES
+68c8d2b3021b   debian:stable           "bash"        4 minutes ago   Up 3 minutes             debian
+09ef0a7b5466   centos:centos7.9.2009   "/bin/bash"   6 minutes ago   Up 6 minutes             centos
+vagrant@server1:~/docker_test/data$
+
+```
+
+---
+
 ## Задача 4 (*)
 
 Воспроизвести практическую часть лекции самостоятельно.
 
 Соберите Docker образ с Ansible, загрузите на Docker Hub и пришлите ссылку вместе с остальными ответами к задачам.
 
+_Ответ:_  
 
----
+```angular2html
 
-### Как cдавать задание
+```
 
-Выполненное домашнее задание пришлите ссылкой на .md-файл в вашем репозитории.
-
----
+https://hub.docker.com/r/maximden/dz_5_3_task4
