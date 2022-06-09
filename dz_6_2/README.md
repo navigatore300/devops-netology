@@ -1,87 +1,185 @@
-1. Q1
+# Задача 1
+
+Используя docker поднимите инстанс PostgreSQL (версию 12) c 2 volume, в который будут складываться данные БД и бэкапы.
+Приведите получившуюся команду или docker-compose манифест.  
+---
+_Ответ:_
+
+Подготавливаем файл `docker-compose.yaml`:
 ```
-userr@home-srv:~$ docker pull postgres:12
-12: Pulling from library/postgres
-42c077c10790: Pull complete
-3c2843bc3122: Pull complete
-12e1d6a2dd60: Pull complete
-9ae1101c4068: Pull complete
-fb05d2fd4701: Pull complete
-9785a964a677: Pull complete
-16fc798b0e72: Pull complete
-f1a0bfa2327a: Pull complete
-f1e20d84ae82: Pull complete
-8b37d1e969e5: Pull complete
-7261decb0bcf: Pull complete
-76fd4336668c: Pull complete
-50b8a43577a4: Pull complete
-Digest: sha256:fe84844ef27aaaa52f6ec68d6b3c225d19eb4f54200a93466aa67798c99aa462
-Status: Downloaded newer image for postgres:12
-docker.io/library/postgres:12
-userr@home-srv:~$ docker volume create db_pg_data
-db_pg_data
-userr@home-srv:~$ docker volume create db_pg_data_backup
-db_pg_data_backup
-userr@home-srv:~$ docker run --rm --name pg-docker -e POSTGRES_PASSWORD=postgres -d -p 5432:5432 -v db_pg_data:/var/lib/postgresql/data -v db_pg_data_backup:/media/postgresql/backup postgres:12
-The files belonging to this database system will be owned by user "postgres".
-This user must also own the server process.
+version: '2.5'
 
-The database cluster will be initialized with locale "en_US.utf8".
-The default database encoding has accordingly been set to "UTF8".
-The default text search configuration will be set to "english".
+volumes:
+  db_data: {}
+  backup: {}
 
-Data page checksums are disabled.
+services:
 
-fixing permissions on existing directory /var/lib/postgresql/data ... ok
-creating subdirectories ... ok
-selecting dynamic shared memory implementation ... posix
-selecting default max_connections ... 100
-selecting default shared_buffers ... 128MB
-selecting default time zone ... Etc/UTC
-creating configuration files ... ok
-running bootstrap script ... ok
-performing post-bootstrap initialization ... ok
-syncing data to disk ... ok
-
-initdb: warning: enabling "trust" authentication for local connections
-You can change this by editing pg_hba.conf or using the option -A, or
---auth-local and --auth-host, the next time you run initdb.
-
-Success. You can now start the database server using:
-
-    pg_ctl -D /var/lib/postgresql/data -l logfile start
-
-waiting for server to start....2022-06-07 19:49:05.974 UTC [48] LOG:  starting PostgreSQL 12.11 (Debian 12.11-1.pgdg110+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 10.2.1-6) 10.2.1 20210110, 64-bit
-2022-06-07 19:49:05.976 UTC [48] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
-2022-06-07 19:49:06.005 UTC [49] LOG:  database system was shut down at 2022-06-07 19:49:05 UTC
-2022-06-07 19:49:06.014 UTC [48] LOG:  database system is ready to accept connections
- done
-server started
-
-/usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
-
-2022-06-07 19:49:06.146 UTC [48] LOG:  received fast shutdown request
-waiting for server to shut down....2022-06-07 19:49:06.151 UTC [48] LOG:  aborting any active transactions
-2022-06-07 19:49:06.153 UTC [48] LOG:  background worker "logical replication launcher" (PID 55) exited with exit code 1
-2022-06-07 19:49:06.154 UTC [50] LOG:  shutting down
-2022-06-07 19:49:06.178 UTC [48] LOG:  database system is shut down
- done
-server stopped
-
-PostgreSQL init process complete; ready for start up.
-
-2022-06-07 19:49:06.267 UTC [1] LOG:  starting PostgreSQL 12.11 (Debian 12.11-1.pgdg110+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 10.2.1-6) 10.2.1 20210110, 64-bit
-2022-06-07 19:49:06.267 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
-2022-06-07 19:49:06.267 UTC [1] LOG:  listening on IPv6 address "::", port 5432
-2022-06-07 19:49:06.275 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
-2022-06-07 19:49:06.303 UTC [67] LOG:  database system was shut down at 2022-06-07 19:49:06 UTC
-2022-06-07 19:49:06.312 UTC [1] LOG:  database system is ready to accept connections
-
-
-userr@home-srv:~$ docker exec -it pg-docker psql -U postgres -d postgres
+  postgres:
+    image: postgres:12
+    container_name: postgre_sql
+    ports:
+      - "0.0.0.0:5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - backup:/media/pg_backup
+    environment:
+      POSTGRES_USER: "pg-user"
+      POSTGRES_PASSWORD: "pg-pass"
+      POSTGRES_DB: "test_db"
+    restart: always
+```
+Выполняем сборку и запуск контейнера:  
+`docker-compose up -d`  
+Подключаемся к контейнеру и запускаем консольную утилиту psql в которой выводим список баз данных:  
+`docker exec -it postgre_sql psql -U pg-user test_db`
+```
 psql (12.11 (Debian 12.11-1.pgdg110+1))
 Type "help" for help.
 
-postgres=#
+test_db=# \l
+                                 List of databases
+   Name    |  Owner  | Encoding |  Collate   |   Ctype    |    Access privileges    
+-----------+---------+----------+------------+------------+-------------------------
+ postgres  | pg-user | UTF8     | en_US.utf8 | en_US.utf8 | 
+ template0 | pg-user | UTF8     | en_US.utf8 | en_US.utf8 | =c/"pg-user"           +
+           |         |          |            |            | "pg-user"=CTc/"pg-user"
+ template1 | pg-user | UTF8     | en_US.utf8 | en_US.utf8 | =c/"pg-user"           +
+           |         |          |            |            | "pg-user"=CTc/"pg-user"
+ test_db   | pg-user | UTF8     | en_US.utf8 | en_US.utf8 | 
+(4 rows)
 
+test_db=# 
 ```
+
+---
+
+## Задача 2
+
+В БД из задачи 1: 
+- создайте пользователя test-admin-user и БД test_db
+- в БД test_db создайте таблицу orders и clients (спeцификация таблиц ниже)
+- предоставьте привилегии на все операции пользователю test-admin-user на таблицы БД test_db
+- создайте пользователя test-simple-user  
+- предоставьте пользователю test-simple-user права на SELECT/INSERT/UPDATE/DELETE данных таблиц БД test_db
+
+Таблица orders:
+- id (serial primary key)
+- наименование (string)
+- цена (integer)
+
+test_db=# CREATE TABLE orders ( id SERIAL PRIMARY KEY, наименование VARCHAR(80), цена INTEGER);
+CREATE TABLE
+test_db=# \d orders
+                                      Table "public.orders"
+    Column    |         Type          | Collation | Nullable |              Default               
+--------------+-----------------------+-----------+----------+------------------------------------
+ id           | integer               |           | not null | nextval('orders_id_seq'::regclass)
+ наименование | character varying(80) |           |          | 
+ цена         | integer               |           |          | 
+Indexes:
+    "orders_pkey" PRIMARY KEY, btree (id)
+
+
+Таблица clients:
+- id (serial primary key)
+- фамилия (string)
+- страна проживания (string, index)
+- заказ (foreign key orders)
+
+test_db=# CREATE TABLE clients ( id SERIAL PRIMARY KEY, фамилия VARCHAR(80), "страна проживания" VARCHAR(80), заказ INTEGER, FOREIGN KEY (заказ) REFERENCES orders (id));
+CREATE TABLE
+
+test_db=# CREATE INDEX "страна проживания_idx" ON clients ("страна проживания");
+CREATE INDEX
+
+test_db=# \d clients
+                                         Table "public.clients"
+      Column       |         Type          | Collation | Nullable |               Default               
+-------------------+-----------------------+-----------+----------+-------------------------------------
+ id                | integer               |           | not null | nextval('clients_id_seq'::regclass)
+ фамилия           | character varying(80) |           |          | 
+ страна проживания | character varying(80) |           |          | 
+ заказ             | integer               |           |          | 
+Indexes:
+    "clients_pkey" PRIMARY KEY, btree (id)
+    "страна проживания_idx" btree ("страна проживания")
+Foreign-key constraints:
+    "clients_заказ_fkey" FOREIGN KEY ("заказ") REFERENCES orders(id)
+
+
+
+Приведите:
+- итоговый список БД после выполнения пунктов выше,
+- описание таблиц (describe)
+- SQL-запрос для выдачи списка пользователей с правами над таблицами test_db
+- список пользователей с правами над таблицами test_db
+
+## Задача 3
+
+Используя SQL синтаксис - наполните таблицы следующими тестовыми данными:
+
+Таблица orders
+
+|Наименование|цена|
+|------------|----|
+|Шоколад| 10 |
+|Принтер| 3000 |
+|Книга| 500 |
+|Монитор| 7000|
+|Гитара| 4000|
+
+Таблица clients
+
+|ФИО|Страна проживания|
+|------------|----|
+|Иванов Иван Иванович| USA |
+|Петров Петр Петрович| Canada |
+|Иоганн Себастьян Бах| Japan |
+|Ронни Джеймс Дио| Russia|
+|Ritchie Blackmore| Russia|
+
+Используя SQL синтаксис:
+- вычислите количество записей для каждой таблицы 
+- приведите в ответе:
+    - запросы 
+    - результаты их выполнения.
+
+## Задача 4
+
+Часть пользователей из таблицы clients решили оформить заказы из таблицы orders.
+
+Используя foreign keys свяжите записи из таблиц, согласно таблице:
+
+|ФИО|Заказ|
+|------------|----|
+|Иванов Иван Иванович| Книга |
+|Петров Петр Петрович| Монитор |
+|Иоганн Себастьян Бах| Гитара |
+
+Приведите SQL-запросы для выполнения данных операций.
+
+Приведите SQL-запрос для выдачи всех пользователей, которые совершили заказ, а также вывод данного запроса.
+ 
+Подсказк - используйте директиву `UPDATE`.
+
+## Задача 5
+
+Получите полную информацию по выполнению запроса выдачи всех пользователей из задачи 4 
+(используя директиву EXPLAIN).
+
+Приведите получившийся результат и объясните что значат полученные значения.
+
+## Задача 6
+
+Создайте бэкап БД test_db и поместите его в volume, предназначенный для бэкапов (см. Задачу 1).
+
+Остановите контейнер с PostgreSQL (но не удаляйте volumes).
+
+Поднимите новый пустой контейнер с PostgreSQL.
+
+Восстановите БД test_db в новом контейнере.
+
+Приведите список операций, который вы применяли для бэкапа данных и восстановления. 
+
+---
