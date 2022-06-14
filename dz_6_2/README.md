@@ -250,10 +250,26 @@ test_db=# SELECT COUNT (*) FROM orders;
 |Иоганн Себастьян Бах| Гитара |
 
 Приведите SQL-запросы для выполнения данных операций.
-
+```
+test_db=# UPDATE  clients SET "заказ" = 3 WHERE id = 1;
+UPDATE 1
+test_db=# UPDATE  clients SET "заказ" = 4 WHERE id = 2;
+UPDATE 1
+test_db=# UPDATE  clients SET "заказ" = 5 WHERE id = 3;
+UPDATE 1
+```
 Приведите SQL-запрос для выдачи всех пользователей, которые совершили заказ, а также вывод данного запроса.
- 
-Подсказк - используйте директиву `UPDATE`.
+```
+test_db=# SELECT clients.фамилия,                                 
+(SELECT orders.наименование FROM orders WHERE orders.id=clients.заказ) AS заказал FROM clients WHERE clients.заказ is Not Null;
+       фамилия        | заказал 
+----------------------+---------
+ Иванов Иван Иванович | Книга
+ Петров Петр Петрович | Монитор
+ Иоганн Себастьян Бах | Гитара
+(3 rows)
+
+```
 
 ## Задача 5
 
@@ -261,17 +277,96 @@ test_db=# SELECT COUNT (*) FROM orders;
 (используя директиву EXPLAIN).
 
 Приведите получившийся результат и объясните что значат полученные значения.
+```
+test_db=# explain SELECT clients.фамилия,
+(SELECT orders.наименование FROM orders WHERE orders.id=clients.заказ) AS заказал FROM clients WHERE clients.заказ is Not Null;
+                                     QUERY PLAN                                     
+------------------------------------------------------------------------------------
+ Seq Scan on clients  (cost=0.00..1636.84 rows=199 width=356)
+   Filter: ("заказ" IS NOT NULL)
+   SubPlan 1
+     ->  Index Scan using orders_pkey on orders  (cost=0.15..8.17 rows=1 width=178)
+           Index Cond: (id = clients."заказ")
+(5 rows)
+```
+Обозначает то, что сначала будут последовательно просмотрены все строки в таблице `clients` с пирменением фильтра не пустого значения поля заказ, а затем поиск по индексированному полю `id` на соответствие значению `clients."заказ"` 
+ ## Задача 6
 
-## Задача 6
+> Создайте бэкап БД test_db и поместите его в volume, предназначенный для бэкапов (см. Задачу 1).
 
-Создайте бэкап БД test_db и поместите его в volume, предназначенный для бэкапов (см. Задачу 1).
+Создаем резервную копию в Volume для резервной копии.
+```
+vagrant@vm-docker:~$ docker exec -t postgre_sql pg_dump -U pg-admin test_db -f /media/pg_backup/dump_test_db.sql
 
-Остановите контейнер с PostgreSQL (но не удаляйте volumes).
+vagrant@vm-docker:~$ docker exec -t postgre_sql ls /media/pg_backup
+dump_test_db.sql
 
-Поднимите новый пустой контейнер с PostgreSQL.
+```
+>Остановите контейнер с PostgreSQL (но не удаляйте volumes).  
+>Поднимите новый пустой контейнер с PostgreSQL.  
+>Восстановите БД test_db в новом контейнере.  
+>Приведите список операций, который вы применяли для бэкапа данных и восстановления.  
 
-Восстановите БД test_db в новом контейнере.
+После создания нового контейнера подключаемся к нему и создаем базу данных и пользователей:
+```
+postgres=# CREATE DATABASE test_db;
+CREATE DATABASE
+postgres=# CREATE USER "test-simple-user" WITH PASSWORD 'pass123';
+CREATE ROLE
+postgres=# CREATE USER "test-admin-user" WITH PASSWORD 'pass12345';
+CREATE ROLE
+```
+После этого запускаем восстановление данных:
+```
+vagrant@vm-docker:~$ docker exec -it postgre_sql_1 psql -Upg-admin -d test_db -f /media/pg_backup/dump_test_db.sql
+SET
+SET
+SET
+SET
+SET
+ set_config 
+------------
+ 
+(1 row)
 
-Приведите список операций, который вы применяли для бэкапа данных и восстановления. 
+SET
+SET
+SET
+SET
+SET
+SET
+CREATE TABLE
+ALTER TABLE
+CREATE SEQUENCE
+ALTER TABLE
+ALTER SEQUENCE
+CREATE TABLE
+ALTER TABLE
+CREATE SEQUENCE
+ALTER TABLE
+ALTER SEQUENCE
+ALTER TABLE
+ALTER TABLE
+COPY 5
+COPY 5
+ setval 
+--------
+      1
+(1 row)
+
+ setval 
+--------
+      1
+(1 row)
+
+ALTER TABLE
+ALTER TABLE
+CREATE INDEX
+ALTER TABLE
+GRANT
+GRANT
+GRANT
+GRANT
+```
 
 ---
