@@ -185,6 +185,67 @@ SELECT ATTRIBUTE->>"$.first_name" AS first_name
 - на `MyISAM`
 - на `InnoDB`
 
+---
+
+_Ответ:_ 
+```
+mysql> SET profiling = 1;
+Query OK, 0 rows affected, 1 warning (0.01 sec)
+
+mysql> SHOW PROFILES;
++----------+------------+----------------------+
+| Query_ID | Duration   | Query                |
++----------+------------+----------------------+
+|        1 | 0.00033175 | SET profiling = 1    |
+|        2 | 0.00433125 | show tables          |
+|        3 | 0.00107975 | SET profiling = 1    |
+|        4 | 0.00176075 | select * from orders |
++----------+------------+----------------------+
+4 rows in set, 1 warning (0.01 sec)
+
+mysql> SELECT table_schema,table_name,engine FROM information_schema.tables WHERE table_schema = DATABASE();
++--------------+------------+--------+
+| TABLE_SCHEMA | TABLE_NAME | ENGINE |
++--------------+------------+--------+
+| test_db      | orders     | InnoDB |
++--------------+------------+--------+
+1 row in set (0.00 sec)
+
+mysql> alter table orders engine = 'MyISAM';
+Query OK, 5 rows affected (0.01 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> alter table orders engine = 'InnoDB';
+Query OK, 5 rows affected (0.05 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> alter table orders engine = 'MyISAM';
+Query OK, 5 rows affected (0.04 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> alter table orders engine = 'InnoDB';
+Query OK, 5 rows affected (0.07 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> SHOW PROFILES;
++----------+------------+------------------------------------------------------------------------------------------------------+
+| Query_ID | Duration   | Query                                                                                                |
++----------+------------+------------------------------------------------------------------------------------------------------+
+|        1 | 0.00033175 | SET profiling = 1                                                                                    |
+|        2 | 0.00433125 | show tables                                                                                          |
+|        3 | 0.00107975 | SET profiling = 1                                                                                    |
+|        4 | 0.00176075 | select * from orders                                                                                 |
+|        5 | 0.00474875 | SELECT table_schema,table_name,engine FROM information_schema.tables WHERE table_schema = DATABASE() |
+|        6 | 0.01437575 | alter table orders engine = 'MyISAM'                                                                 |
+|        7 | 0.04651600 | alter table orders engine = 'InnoDB'                                                                 |
+|        8 | 0.04473700 | alter table orders engine = 'MyISAM'                                                                 |
+|        9 | 0.06244850 | alter table orders engine = 'InnoDB'                                                                 |
++----------+------------+------------------------------------------------------------------------------------------------------+
+9 rows in set, 1 warning (0.00 sec)
+
+```
+
+---
 ## Задача 4 
 
 Изучите файл `my.cnf` в директории /etc/mysql.
@@ -198,7 +259,40 @@ SELECT ATTRIBUTE->>"$.first_name" AS first_name
 
 Приведите в ответе измененный файл `my.cnf`.
 
+В оригинальном файле указано что свои опции надо писать в файл в каталоге /etc/mysql/conf.d/
+```
+[mysqld]
+pid-file        = /var/run/mysqld/mysqld.pid
+socket          = /var/run/mysqld/mysqld.sock
+datadir         = /var/lib/mysql
+secure-file-priv= NULL
 
+# Custom config should go here
+!includedir /etc/mysql/conf.d/
+```
+
+Там и поступим создадим файл `/etc/mysql/conf.d/my_config.cnf`
+```
+[mysqld]
+#Измените его согласно ТЗ (движок InnoDB):
+default_storage_engine = InnoDB
+
+#Скорость IO важнее сохранности данных
+innodb_flush_method = O_DSYNC
+innodb_flush_log_at_trx_commit = 2
+
+#Нужна компрессия таблиц для экономии места на диске
+innodb_file_per_table = 1
+
+#Размер буффера с незакомиченными транзакциями 1 Мб
+innodb_log_buffer_size = 1M
+
+#Буффер кеширования 30% от ОЗУ при 2 Гб
+innodb_buffer_pool_size = 614M
+
+#Размер файла логов операций 100 Мб
+innodb_log_file_size = 100M
+```
 ---
 
 
