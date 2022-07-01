@@ -1,0 +1,19 @@
+version: '2.5'
+
+volumes:
+  db_data_6_4: {}
+
+services:
+
+  postgres:
+    image: postgres:13
+    container_name: postgre_sql_6_4
+    ports:
+      - "0.0.0.0:5432:5432"
+    volumes:
+      - db_data_6_4:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: "pg-admin"
+      POSTGRES_PASSWORD: "pg-pass"
+      POSTGRES_DB: "postgres"
+    restart: always
