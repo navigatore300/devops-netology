@@ -50,22 +50,80 @@ services:
 - вывода списка таблиц - `\dt[S+] [PATTERN]  list tables`
 - вывода описания содержимого таблиц - `\d[S+]  NAME describe table, view, sequence, or index`
 - выхода из psql - `\q quit psql`
-```
+
+---
+
 ## Задача 2
 
 Используя `psql` создайте БД `test_database`.
+```
+CREATE DATABASE test_database;
+```
 
 Изучите [бэкап БД](https://github.com/netology-code/virt-homeworks/tree/master/06-db-04-postgresql/test_data).
 
 Восстановите бэкап БД в `test_database`.
 
+Запускаем восстановление данных предварительно создав роль которая есть в дампе:
+```
+vagrant@vm-docker:~/dz_6_4$ echo "CREATE USER "postgres" WITH PASSWORD 'pass123';" | docker exec -i postgre_sql_6_4 psql -Upg-admin -d test_database
+CREATE ROLE
+vagrant@vm-docker:~/dz_6_4$ cat test_dump.sql | docker exec -i postgre_sql_6_4 psql -Upg-admin -d test_database
+SET
+SET
+SET
+SET
+SET
+ set_config 
+------------
+ 
+(1 row)
+
+SET
+SET
+SET
+SET
+SET
+SET
+CREATE TABLE
+ALTER TABLE
+CREATE SEQUENCE
+ALTER TABLE
+ALTER SEQUENCE
+ALTER TABLE
+COPY 8
+ setval 
+--------
+      8
+(1 row)
+
+ALTER TABLE
+```
 Перейдите в управляющую консоль `psql` внутри контейнера.
-
+```
+docker exec -it postgre_sql_6_4 psql -U pg-admin postgres
+```
 Подключитесь к восстановленной БД и проведите операцию ANALYZE для сбора статистики по таблице.
+```
+postgres=# \c test_database 
+You are now connected to database "test_database" as user "pg-admin".
 
+test_database=# ANALYZE VERBOSE orders;
+INFO:  analyzing "public.orders"
+INFO:  "orders": scanned 1 of 1 pages, containing 8 live rows and 0 dead rows; 8 rows in sample, 8 estimated total rows
+ANALYZE
+
+```
 Используя таблицу [pg_stats](https://postgrespro.ru/docs/postgresql/12/view-pg-stats), найдите столбец таблицы `orders` 
 с наибольшим средним значением размера элементов в байтах.
+```
+test_database=# SELECT attname, avg_width FROM pg_stats WHERE tablename = 'orders' order by avg_width desc limit 1;
+ attname | avg_width 
+---------+-----------
+ title   |        16
+(1 row)
 
+```
 **Приведите в ответе** команду, которую вы использовали для вычисления и полученный результат.
 
 ## Задача 3
