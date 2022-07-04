@@ -136,6 +136,58 @@ test_database=# SELECT attname, avg_width FROM pg_stats WHERE tablename = 'order
 
 Можно ли было изначально исключить "ручное" разбиение при проектировании таблицы orders?
 
+---
+
+_Ответ:_  
+Смотрим как выполняется запрос  до изменений:
+![](img/img.png)
+1. Создаем функцию:  
+```postgresql
+CREATE OR REPLACE FUNCTION orders_insert_tg() RETURNS TRIGGER AS $$
+DECLARE partition_table_name text;
+BEGIN
+  if new.price < 500 then
+      partition_table_name = 'orders_2';
+      IF (TO_REGCLASS(partition_table_name) IS NULL) THEN
+        EXECUTE FORMAT(
+            'CREATE TABLE %I ('
+            '  CHECK (price < 500)'
+            ') INHERITS (orders);'
+            , partition_table_name);
+      end if;
+  else
+      partition_table_name = 'orders_1';
+      IF (TO_REGCLASS(partition_table_name) IS NULL) THEN
+        EXECUTE FORMAT(
+            'CREATE TABLE %I ('
+            '  CHECK (price >= 500)'
+            ') INHERITS (orders);'
+            , partition_table_name);
+      end if;
+  end if;
+  EXECUTE FORMAT('INSERT INTO %I VALUES ($1.*)', partition_table_name) USING NEW;
+  RETURN NULL;
+END; $$ LANGUAGE plpgsql;
+```
+2. Вешаем триггер на таблицу `orders` :
+```postgresql
+CREATE TRIGGER orders_insert_tg
+BEFORE insert ON orders
+FOR EACH ROW EXECUTE FUNCTION orders_insert_tg();
+```
+3. Разносим данные по таблицам:
+```postgresql
+WITH cte AS (  
+    DELETE FROM ONLY orders RETURNING *)
+INSERT INTO orders   
+SELECT * FROM cte;
+```
+После преобразования план выглядит следующим образом:  
+![](img/img_1.png)
+
+"Ручное" разбиение таблицы orders можно было избежать если бы функция и триггер были бы созданы при создании базы.
+
+---
 ## Задача 4
 
 Используя утилиту `pg_dump` создайте бекап БД `test_database`.
