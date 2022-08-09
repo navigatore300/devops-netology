@@ -148,8 +148,88 @@ curl -X DELETE 'localhost:9200/ind-1'
 curl -X DELETE 'localhost:9200/ind-2'
 curl -X DELETE 'localhost:9200/ind-3'
 
-url -X GET 'localhost:9200/_cat/indices?v=true'
+сurl -X GET 'localhost:9200/_cat/indices?v=true'
 health status index            uuid                   pri rep docs.count docs.deleted store.size pri.store.size
 green  open   .geoip_databases WQUpgnuES2GZRKZjalg8Rg   1   0         39            0       37mb           37mb
 
+```
+3. 333
+
+Регистрация репозитория:
+```shell
+
+curl -X PUT "localhost:9200/_snapshot/netology_backup" -H 'Content-Type: application/json' -d'
+{
+  "type": "fs",
+  "settings": {
+    "location": "/usr/share/elasticsearch/snapshots"
+  }
+}'
+```
+В отвел получаем: {"acknowledged":true}
+
+Создаем индекс test:
+```
+curl -X PUT "localhost:9200/test" -H 'Content-Type: application/json' -d'
+{
+  "settings": {
+    "index": {
+      "number_of_replicas": 0,
+      "number_of_shards": 1
+    }  
+  }
+}
+'
+```
+
+Получаем в ответ: {"acknowledged":true,"shards_acknowledged":true,"index":"test"}
+```
+сurl -X GET 'localhost:9200/_cat/indices?v=true'
+
+curl -X GET 'localhost:9200/_cat/indices?v=true'
+health status index            uuid                   pri rep docs.count docs.deleted store.size pri.store.size
+green  open   .geoip_databases WQUpgnuES2GZRKZjalg8Rg   1   0         39            0       37mb           37mb
+green  open   test             _Qu7Uw7JSiiGjNNO9D8nxA   1   0          0            0       226b           226b
+```
+
+Создание снэпшота:
+
+`curl -X PUT 'localhost:9200/_snapshot/netology_backup/first_snapshot'`  
+`{"accepted":true}`
+
+```shell
+docker exec -t 1c414d4510ec ls /usr/share/elasticsearch/snapshots/ -lah 
+
+total 52K
+drwxr-xr-x 1 elasticsearch elasticsearch 4.0K Aug  9 17:38 .
+drwxrwxr-x 1 root          root          4.0K Aug  9 10:20 ..
+-rw-rw-r-- 1 elasticsearch root          1.4K Aug  9 17:38 index-0
+-rw-rw-r-- 1 elasticsearch root             8 Aug  9 17:38 index.latest
+drwxrwxr-x 6 elasticsearch root          4.0K Aug  9 17:38 indices
+-rw-rw-r-- 1 elasticsearch root           23K Aug  9 17:38 meta-daRW2SKvRO6DCB3ITi_fnA.dat
+-rw-rw-r-- 1 elasticsearch root           713 Aug  9 17:38 snap-daRW2SKvRO6DCB3ITi_fnA.dat
+```
+
+Результирующий список индексов после удаления test и создания test-2:
+```shell
+curl -X GET 'localhost:9200/_cat/indices?v=true'
+health status index            uuid                   pri rep docs.count docs.deleted store.size pri.store.size
+green  open   .geoip_databases WQUpgnuES2GZRKZjalg8Rg   1   0         39            0       37mb           37mb
+green  open   test-2           nEUAHIrRRum5jkwpDgXEzQ   1   0          0            0       226b           226b
+```
+Восстановление из снэпшота. Пришлось явно указать индекс test для восстановления, так как восстановление без аргументов приводило к ошибке из-за того, что дефолтный индекс .geoip_databases уже существовал:  
+
+```shell
+curl -X POST 'localhost:9200/_snapshot/netology_backup/first_snapshot/_restore' \
+-H 'Content-Type: application/json' \
+-d '{
+    "indices": "test"
+}'
+```
+Список индексов после восстановления:
+```shell
+health status index            uuid                   pri rep docs.count docs.deleted store.size pri.store.size
+green  open   .geoip_databases WQUpgnuES2GZRKZjalg8Rg   1   0         39            0       37mb           37mb
+green  open   test-2           nEUAHIrRRum5jkwpDgXEzQ   1   0          0            0       226b           226b
+green  open   test             kGguRorXRU6f9JyXk6s0ng   1   0          0            0       226b           226b
 ```
