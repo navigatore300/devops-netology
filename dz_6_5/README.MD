@@ -1,32 +1,40 @@
-```
-cat Dockerfile 
-FROM elasticsearch:7.17.5
+# Домашнее задание к занятию "6.5. Elasticsearch"
 
-RUN mkdir /var/lib/elasticsearch/ &amp;&amp; \
-        chown -R elasticsearch:elasticsearch /var/lib/elasticsearch/  &amp;&amp; \
-        mkdir /usr/share/elasticsearch/snapshots/ &amp;&amp; \
-        chown -R elasticsearch:elasticsearch /usr/share/elasticsearch/snapshots/
+## Задача 1
 
-COPY ./config/elasticsearch.yml /usr/share/elasticsearch/config/
+В этом задании вы потренируетесь в:
+- установке elasticsearch
+- первоначальном конфигурировании elastcisearch
+- запуске elasticsearch в docker
 
-EXPOSE 9200
+Используя докер образ [centos:7](https://hub.docker.com/_/centos) как базовый и 
+[документацию по установке и запуску Elastcisearch](https://www.elastic.co/guide/en/elasticsearch/reference/current/targz.html):
 
-CMD [&quot;bin/elasticsearch&quot;]
+- составьте Dockerfile-манифест для elasticsearch
+- соберите docker-образ и сделайте `push` в ваш docker.io репозиторий
+- запустите контейнер из получившегося образа и выполните запрос пути `/` c хост-машины
 
---------------------------
-cat docker-compose.yml 
-version: '3.1'
+Требования к `elasticsearch.yml`:
+- данные `path` должны сохраняться в `/var/lib`
+- имя ноды должно быть `netology_test`
 
-services:
-  elastic:
-    build: .
-    restart: always
-    ports:
-      - 9200:9200
+В ответе приведите:
+- текст Dockerfile манифеста
+- ссылку на образ в репозитории dockerhub
+- ответ `elasticsearch` на запрос пути `/` в json виде
 
---------------------------
+Подсказки:
+- возможно вам понадобится установка пакета perl-Digest-SHA для корректной работы пакета shasum
+- при сетевых проблемах внимательно изучите кластерные и сетевые настройки в elasticsearch.yml
+- при некоторых проблемах вам поможет docker директива ulimit
+- elasticsearch в логах обычно описывает проблему и пути ее решения
 
-cat ./config/elasticsearch.yml 
+Далее мы будем работать с данным экземпляром elasticsearch.  
+
+---
+_Ответ:_  
+Создаем папку config в которой размещаем файл elasticsearch.yml следующего содержания:  
+```shell
 # ======================== Elasticsearch Configuration =========================
 # ---------------------------------- Cluster -----------------------------------
 cluster.name: dz_6_5_netology
@@ -35,6 +43,7 @@ node.name: netology_test
 # ----------------------------------- Paths ------------------------------------
 path.data: /var/lib/elasticsearch/data
 path.logs: /var/lib/elasticsearch/logs
+# Folder for task 3. Snapshots.
 path.repo: /usr/share/elasticsearch/snapshots
 # ----------------------------------- Memory -----------------------------------
 #
@@ -47,17 +56,40 @@ discovery.type: single-node
 # ---------------------------------- Various -----------------------------------
 #action.destructive_requires_name: false
 xpack.ml.enabled: false
+```
+Подготавливаем Dockerfile для контейнера:  
+```
+FROM elasticsearch:7.17.5
 
-=======================
+RUN mkdir /var/lib/elasticsearch/ &amp;&amp; \
+        chown -R elasticsearch:elasticsearch /var/lib/elasticsearch/  &amp;&amp; \
+        mkdir /usr/share/elasticsearch/snapshots/ &amp;&amp; \
+        chown -R elasticsearch:elasticsearch /usr/share/elasticsearch/snapshots/
 
-docker build -t maximden/dz_6_5:latest .
+COPY ./config/elasticsearch.yml /usr/share/elasticsearch/config/
+
+EXPOSE 9200
+
+CMD ["bin/elasticsearch"]
+```
+Строим контейнер:  
+
+`docker build -t maximden/dz_6_5:latest .`  
+
+Навешиваем тег и push-им его в docker hub.
+```
 docker tag maximden/dz_6_5:latest maximden/dz_6_5:latest
 docker login
 docker push maximden/dz_6_5:latest
-docker run --rm -d --name my_elastic -p 9200:9200 maximden/dz_6_5:latest
-=======================
+```
+Запускаем постоеный контейнер:  
 
-curl http://localhost:9200
+`docker run --rm -d --name my_elastic -p 9200:9200 maximden/dz_6_5:latest`
+
+Ответ `elasticsearch` на запрос пути `/` в json виде:  
+
+`curl http://localhost:9200`  
+```
 {
   "name" : "netology_test",
   "cluster_name" : "dz_6_5_netology",
@@ -75,14 +107,40 @@ curl http://localhost:9200
   },
   "tagline" : "You Know, for Search"
 }
-
-
 ```
 
 Ссылка на репозиторий https://hub.docker.com/r/maximden/dz_6_5
 
 
-2. 111
+## Задача 2
+
+В этом задании вы научитесь:
+- создавать и удалять индексы
+- изучать состояние кластера
+- обосновывать причину деградации доступности данных
+
+Ознакомтесь с [документацией](https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-create-index.html) 
+и добавьте в `elasticsearch` 3 индекса, в соответствии со таблицей:
+
+| Имя | Количество реплик | Количество шард |
+|-----|-------------------|-----------------|
+| ind-1| 0 | 1 |
+| ind-2 | 1 | 2 |
+| ind-3 | 2 | 4 |
+
+Получите список индексов и их статусов, используя API и **приведите в ответе** на задание.
+
+Получите состояние кластера `elasticsearch`, используя API.
+
+Как вы думаете, почему часть индексов и кластер находится в состоянии yellow?
+
+Удалите все индексы.
+
+**Важно**
+
+При проектировании кластера elasticsearch нужно корректно рассчитывать количество реплик и шард,
+иначе возможна потеря данных индексов, вплоть до полной, при деградации системы.
+
 ```
 curl -X PUT "localhost:9200/ind-1" -H 'Content-Type: application/json' -d'
 {
@@ -153,7 +211,35 @@ health status index            uuid                   pri rep docs.count docs.de
 green  open   .geoip_databases WQUpgnuES2GZRKZjalg8Rg   1   0         39            0       37mb           37mb
 
 ```
-3. 333
+## Задача 3
+
+В данном задании вы научитесь:
+- создавать бэкапы данных
+- восстанавливать индексы из бэкапов
+
+Создайте директорию `{путь до корневой директории с elasticsearch в образе}/snapshots`.
+
+Используя API [зарегистрируйте](https://www.elastic.co/guide/en/elasticsearch/reference/current/snapshots-register-repository.html#snapshots-register-repository) 
+данную директорию как `snapshot repository` c именем `netology_backup`.
+
+**Приведите в ответе** запрос API и результат вызова API для создания репозитория.
+
+Создайте индекс `test` с 0 реплик и 1 шардом и **приведите в ответе** список индексов.
+
+[Создайте `snapshot`](https://www.elastic.co/guide/en/elasticsearch/reference/current/snapshots-take-snapshot.html) 
+состояния кластера `elasticsearch`.
+
+**Приведите в ответе** список файлов в директории со `snapshot`ами.
+
+Удалите индекс `test` и создайте индекс `test-2`. **Приведите в ответе** список индексов.
+
+[Восстановите](https://www.elastic.co/guide/en/elasticsearch/reference/current/snapshots-restore-snapshot.html) состояние
+кластера `elasticsearch` из `snapshot`, созданного ранее. 
+
+**Приведите в ответе** запрос к API восстановления и итоговый список индексов.
+
+Подсказки:
+- возможно вам понадобится доработать `elasticsearch.yml` в части директивы `path.repo` и перезапустить `elasticsearch`
 
 Регистрация репозитория:
 ```shell
