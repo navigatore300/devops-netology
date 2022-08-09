@@ -141,6 +141,10 @@ docker push maximden/dz_6_5:latest
 При проектировании кластера elasticsearch нужно корректно рассчитывать количество реплик и шард,
 иначе возможна потеря данных индексов, вплоть до полной, при деградации системы.
 
+---
+_Ответ:_  
+
+Добавим в `elasticsearch` 3 индекса в  соответствии с таблицей:  
 ```
 curl -X PUT "localhost:9200/ind-1" -H 'Content-Type: application/json' -d'
 {
@@ -168,7 +172,9 @@ curl -X PUT "localhost:9200/ind-3" -H 'Content-Type: application/json' -d'
   }
 }
 '
-====
+```
+Получим список индексов и их статусы, используя API:  
+```
 curl --location --request GET 'localhost:9200/_cat/indices?v=true'
 
 health status index            uuid                   pri rep docs.count docs.deleted store.size pri.store.size
@@ -176,7 +182,9 @@ green  open   .geoip_databases WQUpgnuES2GZRKZjalg8Rg   1   0         39        
 green  open   ind-1            tDpXLlQHSOCMdoI-Nbzbeg   1   0          0            0       226b           226b
 yellow open   ind-3            ZXbPL0WNSumOKEIL6uE7bw   4   2          0            0       904b           904b
 yellow open   ind-2            UF_RjiDYTQ6hOWEzvmNshg   2   1          0            0       452b           452b
-
+``` 
+Получим состояние кластера elasticsearch, используя API:  
+```
 curl localhost:9200/_cluster/health | python3 -m json.tool
 
 {
@@ -196,20 +204,23 @@ curl localhost:9200/_cluster/health | python3 -m json.tool
     "task_max_waiting_in_queue_millis": 0,
     "active_shards_percent_as_number": 50.0
 }
-
+``` 
 Часть индексов и кластер находятся в состоянии yellow. Это указывает на присутствие некоторых проблем.
-Для кластера недостаточно нод для распределения по ним имеющихся шардов у этих индексов. 
+Для кластера недостаточно нод для распределения по ним имеющихся шардов для индексов со значением реплик более нуля. 
 У нас только одна нода, а у индексов 2 и 3 указаны реплики.
 
-Удаление индексов:
+Удаление индексов:  
+```
 curl -X DELETE 'localhost:9200/ind-1'
 curl -X DELETE 'localhost:9200/ind-2'
 curl -X DELETE 'localhost:9200/ind-3'
-
+```
+Результат после удаления:  
+```
 сurl -X GET 'localhost:9200/_cat/indices?v=true'
+
 health status index            uuid                   pri rep docs.count docs.deleted store.size pri.store.size
 green  open   .geoip_databases WQUpgnuES2GZRKZjalg8Rg   1   0         39            0       37mb           37mb
-
 ```
 ## Задача 3
 
@@ -241,9 +252,12 @@ green  open   .geoip_databases WQUpgnuES2GZRKZjalg8Rg   1   0         39        
 Подсказки:
 - возможно вам понадобится доработать `elasticsearch.yml` в части директивы `path.repo` и перезапустить `elasticsearch`
 
+---
+
+_Ответ:_
+
 Регистрация репозитория:
 ```shell
-
 curl -X PUT "localhost:9200/_snapshot/netology_backup" -H 'Content-Type: application/json' -d'
 {
   "type": "fs",
@@ -252,9 +266,9 @@ curl -X PUT "localhost:9200/_snapshot/netology_backup" -H 'Content-Type: applica
   }
 }'
 ```
-В отвел получаем: {"acknowledged":true}
+В ответ получаем: `{"acknowledged":true}`  
 
-Создаем индекс test:
+Создаем индекс test с 0 реплик и 1 шардом:
 ```
 curl -X PUT "localhost:9200/test" -H 'Content-Type: application/json' -d'
 {
@@ -268,21 +282,25 @@ curl -X PUT "localhost:9200/test" -H 'Content-Type: application/json' -d'
 '
 ```
 
-Получаем в ответ: {"acknowledged":true,"shards_acknowledged":true,"index":"test"}
+Получаем в ответ: `{"acknowledged":true,"shards_acknowledged":true,"index":"test"}`  
+Просматриваем список индексов:  
 ```
 сurl -X GET 'localhost:9200/_cat/indices?v=true'
 
-curl -X GET 'localhost:9200/_cat/indices?v=true'
 health status index            uuid                   pri rep docs.count docs.deleted store.size pri.store.size
 green  open   .geoip_databases WQUpgnuES2GZRKZjalg8Rg   1   0         39            0       37mb           37mb
 green  open   test             _Qu7Uw7JSiiGjNNO9D8nxA   1   0          0            0       226b           226b
 ```
 
-Создание снэпшота:
+Создаем snapshot состояния кластера elasticsearch:
 
 `curl -X PUT 'localhost:9200/_snapshot/netology_backup/first_snapshot'`  
+
+Получаем в ответ:  
+
 `{"accepted":true}`
 
+Просмотрим список файлов в директории со snapshot-ами:  
 ```shell
 docker exec -t 1c414d4510ec ls /usr/share/elasticsearch/snapshots/ -lah 
 
@@ -303,8 +321,7 @@ health status index            uuid                   pri rep docs.count docs.de
 green  open   .geoip_databases WQUpgnuES2GZRKZjalg8Rg   1   0         39            0       37mb           37mb
 green  open   test-2           nEUAHIrRRum5jkwpDgXEzQ   1   0          0            0       226b           226b
 ```
-Восстановление из снэпшота. Пришлось явно указать индекс test для восстановления, так как восстановление без аргументов приводило к ошибке из-за того, что дефолтный индекс .geoip_databases уже существовал:  
-
+Восстановление из snapshot-а. Явно указываем индекс test для восстановления, так как восстановление без аргументов приводило к ошибке из-за того, что дефолтный индекс .geoip_databases уже существовал:  
 ```shell
 curl -X POST 'localhost:9200/_snapshot/netology_backup/first_snapshot/_restore' \
 -H 'Content-Type: application/json' \
