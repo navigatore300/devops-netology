@@ -1,0 +1,8 @@
+#cloud-config
+users:
+  - name: userr
+    groups: sudo
+    shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    ssh_authorized_keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDLpz1s1tWcPCRmdhinP2M3YWEsLd3QUskrKqQv03dcpC4zowFggyAVCfGxTBvAWA/zFT3RWdSGO0zVRpu8AY8uZPdhfZTceZ/zMkX4RIKuaug6csAQZQ3Rpup6FhjRkUyvVraNExLk3bTXGxdL6U3ABkHMVljj8MqSmSHsa/GYPJuCwf89fdqD9HgTUulHTZ972NoNJDQ7W16y5xnRdEQuU9BVVuccSz+wn6wkWaM+/h7FdlxWkCnZhhzigjDRK9UjjgX3mXjQS1deVGuYLSXKZ75R1YXqkr02SHHYhlp9V1/5Zwp5jGyaCgEhjrIoLBmatSWFGpUt5TW9N6NLRN29rkww91z9j6FXrP2hEosPMnph+GGKQk2GYJmFa+trCtvfX/g5Oncc0rDmaiG8WcjMaeeJppZPKOaRs+kZtkNC3HKrNjCWOXk2TjDvL7SpA2ARsVd0Xuvv2C8d7h5t+Vxp1aeCLSgp6Xu+zdDilU1c+MID40GWu3pzugLWyS/MQPE= userr@HP-ProBook
