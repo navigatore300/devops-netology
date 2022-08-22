@@ -14,6 +14,14 @@ provider "yandex" {
   zone      = "${var.yandex_zone}"
 }
 
+locals {
+  instances_type_map_image = {
+    prod = "${var.ubuntu2004lts}"
+    stage = "${var.ubuntu1604lts}"
+  }
+}
+
+
 resource "yandex_compute_instance" "vm-1" {
   name = "terraform1"
 
@@ -24,7 +32,8 @@ resource "yandex_compute_instance" "vm-1" {
 
   boot_disk {
     initialize_params {
-      image_id    = "${var.ubuntu1604lts}"
+      // Если prod то образ 2004lts иначе 1604lts
+      image_id    =  local.instances_type_map_image[terraform.workspace]
     }
   }
 

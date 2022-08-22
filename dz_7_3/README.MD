@@ -56,8 +56,33 @@ dynamodb.
 
 ---
 
-### Как cдавать задание
-
-Выполненное домашнее задание пришлите ссылкой на .md-файл в вашем репозитории.
-
+__Ответ:__
+Вывод команды `terraform workspace list`.
+```
+userr@HP-ProBook:~/PycharmProjects/devops-netology/dz_7_3/terraform$ terraform workspace list
+  default
+* prod
+  stage
+```
+В яндекс облаке нет пресетов, поэтому реализовал изменение конфига машины (в моем случае разный образ диска):
+```shell
+locals {
+  instances_type_map_image = {
+    prod = "${var.ubuntu2004lts}"
+    stage = "${var.ubuntu1604lts}"
+  }
+}
+```
+Результат работы виде в разнице вывода `terraform plan`
+```shell
+terraform plan > stage_plan.txt
+terraform workspace select prod
+Switched to workspace "prod".
+terraform plan > prod_plan.txt
+diff prod_plan.txt stage_plan.txt 
+43c43
+<               + image_id    = "f2ej3v69sukaa9c7p0vt"
 ---
+>               + image_id    = "fd8j0himen71r665h761"
+
+```
