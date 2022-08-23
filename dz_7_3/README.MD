@@ -86,3 +86,37 @@ diff prod_plan.txt stage_plan.txt
 >               + image_id    = "fd8j0himen71r665h761"
 
 ```
+После внесения `count` команда `terraform plan` прогнозируемо имеет разницу в выводе:
+```
+userr@HP-ProBook:~/PycharmProjects/devops-netology/dz_7_3/terraform$ terraform plan | grep name
+      + hostname                  = (known after apply)
+                  - name: userr
+      + name                      = "terraform-prod-0"
+          + device_name = (known after apply)
+              + name        = (known after apply)
+      + hostname                  = (known after apply)
+                  - name: userr
+      + name                      = "terraform-prod-1"
+          + device_name = (known after apply)
+              + name        = (known after apply)
+      + name                      = "network1"
+      + name           = "subnet1"
+      
+userr@HP-ProBook:~/PycharmProjects/devops-netology/dz_7_3/terraform$ terraform workspace list
+  default
+* prod
+  stage
+
+userr@HP-ProBook:~/PycharmProjects/devops-netology/dz_7_3/terraform$ terraform workspace select stage
+Switched to workspace "stage".
+
+userr@HP-ProBook:~/PycharmProjects/devops-netology/dz_7_3/terraform$ terraform plan | grep name
+      + hostname                  = (known after apply)
+                  - name: userr
+      + name                      = "terraform-stage-0"
+          + device_name = (known after apply)
+              + name        = (known after apply)
+      + name                      = "network1"
+      + name           = "subnet1"
+
+```
