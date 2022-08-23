@@ -52,6 +52,11 @@ resource "yandex_compute_instance" "vm-count" {
     #ssh-keys = "ubuntu:${file("~/keys_ssh.pub")}"
     user-data = "${file("./meta.txt")}"
   }
+    //п.6
+  lifecycle {
+    create_before_destroy = true
+  }
+
 }
 
 resource "yandex_vpc_network" "network-1" {
