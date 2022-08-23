@@ -194,3 +194,11 @@ userr@HP-ProBook:~/PycharmProjects/devops-netology/dz_7_3/terraform$ terraform p
       + name           = "subnet1"
 
 ```
+
+Добавил блок:  
+```shell
+  lifecycle {
+    create_before_destroy = true
+  }
+```
+Файлы terraform в [папке](https://github.com/navigatore300/devops-netology/tree/main/dz_7_3/terraform) 
