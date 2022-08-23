@@ -54,30 +54,6 @@ resource "yandex_compute_instance" "vm-count" {
   }
 }
 
-#resource "yandex_compute_instance" "vm-2" {
-#  name = "terraform2"
-#
-#  resources {
-#    cores  = 1
-#    memory = 1
-#  }
-#
-#  boot_disk {
-#    initialize_params {
-#      image_id = "fd8j0himen71r665h761"
-#    }
-#  }
-#
-#  network_interface {
-#    subnet_id = yandex_vpc_subnet.subnet-1.id
-#    nat       = true
-#  }
-#
-#  metadata = {
-#    ssh-keys = "ubuntu:${file("~/keys_ssh.pub")}"
-#  }
-#}
-
 resource "yandex_vpc_network" "network-1" {
   name = "network1"
 }
@@ -89,6 +65,38 @@ resource "yandex_vpc_subnet" "subnet-1" {
   v4_cidr_blocks = ["192.168.10.0/24"]
 }
 
+locals {
+  instance_for_each_map = {
+    stage = {
+      "vm1" = { core = 2, memory = 2},
+    },
+    prod = {
+      "vm1" = { core = 2, memory = 2},
+      "vm2" = { core = 4, memory = 4},
+    }
+  }
+}
+
+resource "yandex_compute_instance" "vm-foreach" {
+  //п.5. определите их количество при помощи for_each, а не count.
+  for_each = local.instance_for_each_map[terraform.workspace]
+  name     = "foreach-test-${terraform.workspace}-${each.key}"
+  resources {
+    cores  = each.value.core
+    memory = each.value.memory
+  }
+
+  boot_disk {
+    initialize_params {
+      // Если prod то образ 2004lts иначе 1604lts
+      image_id    =  local.instances_type_map_image[terraform.workspace]
+    }
+  }
+
+  network_interface {
+    subnet_id = "${yandex_vpc_subnet.subnet-1.id}"
+  }
+}
 #output "internal_ip_address_vm_1" {
 #  value = yandex_compute_instance.vm-1[count.index]
 #}

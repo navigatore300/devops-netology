@@ -120,3 +120,77 @@ userr@HP-ProBook:~/PycharmProjects/devops-netology/dz_7_3/terraform$ terraform p
       + name           = "subnet1"
 
 ```
+Добавил `foreach` в котором в зависимость от воркспейса изменяется количество машин и их характеристики (ядра и память).  
+```shell
+locals {
+  instance_for_each_map = {
+    stage = {
+      "vm1" = { core = 2, memory = 2},
+    },
+    prod = {
+      "vm1" = { core = 2, memory = 2},
+      "vm2" = { core = 4, memory = 4},
+    }
+  }
+}
+
+resource "yandex_compute_instance" "vm-foreach" {
+  //п.5. определите их количество при помощи for_each, а не count.
+  for_each = local.instance_for_each_map[terraform.workspace]
+  name     = "foreach-test-${terraform.workspace}-${each.key}"
+  resources {
+    cores  = each.value.core
+    memory = each.value.memory
+  }
+
+  boot_disk {
+    initialize_params {
+      // Если prod то образ 2004lts иначе 1604lts
+      image_id    =  local.instances_type_map_image[terraform.workspace]
+    }
+  }
+
+  network_interface {
+    subnet_id = "${yandex_vpc_subnet.subnet-1.id}"
+  }
+}
+```
+Теперь вывод: 
+```shell
+userr@HP-ProBook:~/PycharmProjects/devops-netology/dz_7_3/terraform$ terraform plan | grep name
+      + hostname                  = (known after apply)
+                  - name: userr
+      + name                      = "terraform-stage-0"
+          + device_name = (known after apply)
+              + name        = (known after apply)
+      + hostname                  = (known after apply)
+      + name                      = "foreach-test-stage-vm1"
+          + device_name = (known after apply)
+              + name        = (known after apply)
+      + name                      = "network1"
+      + name           = "subnet1"
+userr@HP-ProBook:~/PycharmProjects/devops-netology/dz_7_3/terraform$ terraform workspace select prod
+Switched to workspace "prod".
+userr@HP-ProBook:~/PycharmProjects/devops-netology/dz_7_3/terraform$ terraform plan | grep name
+      + hostname                  = (known after apply)
+                  - name: userr
+      + name                      = "terraform-prod-0"
+          + device_name = (known after apply)
+              + name        = (known after apply)
+      + hostname                  = (known after apply)
+                  - name: userr
+      + name                      = "terraform-prod-1"
+          + device_name = (known after apply)
+              + name        = (known after apply)
+      + hostname                  = (known after apply)
+      + name                      = "foreach-test-prod-vm1"
+          + device_name = (known after apply)
+              + name        = (known after apply)
+      + hostname                  = (known after apply)
+      + name                      = "foreach-test-prod-vm2"
+          + device_name = (known after apply)
+              + name        = (known after apply)
+      + name                      = "network1"
+      + name           = "subnet1"
+
+```
