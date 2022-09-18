@@ -146,8 +146,24 @@ INFO: ------------------------------------------------------------------------
    5. type: tar.gz
 2. В него же загружаем такой же артефакт, но с version: 8_102
 3. Проверяем, что все файлы загрузились успешно
+![img_4.png](img_4.png)
 4. В ответе присылаем файл `maven-metadata.xml` для этого артефекта
-
+```angular2html
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata modelVersion="1.1.0">
+  <groupId>netology</groupId>
+  <artifactId>java</artifactId>
+  <versioning>
+    <latest>8_282</latest>
+    <release>8_282</release>
+    <versions>
+      <version>8_102</version>
+      <version>8_282</version>
+    </versions>
+    <lastUpdated>20220918091533</lastUpdated>
+  </versioning>
+</metadata>
+```
 ### Знакомство с Maven
 
 ### Подготовка к выполнению
