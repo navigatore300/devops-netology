@@ -171,19 +171,42 @@ INFO: ------------------------------------------------------------------------
 1. Скачиваем дистрибутив с [maven](https://maven.apache.org/download.cgi)
 2. Разархивируем, делаем так, чтобы binary был доступен через вызов в shell (или меняем переменную PATH или любой другой удобный вам способ)
 3. Проверяем `mvn --version`
+![img_5.png](img_5.png)
 4. Забираем директорию [mvn](./mvn) с pom
 
 ### Основная часть
 
 1. Меняем в `pom.xml` блок с зависимостями под наш артефакт из первого пункта задания для Nexus (java с версией 8_282)
 2. Запускаем команду `mvn package` в директории с `pom.xml`, ожидаем успешного окончания
-3. Проверяем директорию `~/.m2/repository/`, находим наш артефакт
+![img_6.png](img_6.png)
+3.Проверяем директорию `~/.m2/repository/`, находим наш артефакт
+![img_7.png](img_7.png)
 4. В ответе присылаем исправленный файл `pom.xml`
-
----
-
-### Как оформить ДЗ?
-
-Выполненное домашнее задание пришлите ссылкой на .md-файл в вашем репозитории.
+```angular2html
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+ 
+  <groupId>com.netology.app</groupId>
+  <artifactId>simple-app</artifactId>
+  <version>1.0-SNAPSHOT</version>
+   <repositories>
+    <repository>
+      <id>my-repo</id>
+      <name>maven-public</name>
+      <url>http://localhost:8081/repository/maven-public/</url>
+    </repository>
+  </repositories>
+  <dependencies>
+    <dependency>
+      <groupId>netology</groupId>
+      <artifactId>java</artifactId>
+      <version>8_282</version>
+      <classifier>distrib</classifier>
+      <type>tar.gz</type>
+    </dependency>
+  </dependencies>
+</project>
+```
 
 ---
