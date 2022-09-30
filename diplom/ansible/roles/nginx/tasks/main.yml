@@ -1,0 +1,75 @@
+---
+# tasks file for nginx_role
+#   Обновляем пакеты и ставим необходимое ПО
+#- name: Update all packages to their latest version
+#  ansible.builtin.apt:
+#    name: "*"
+#    update_cache: yes
+#    state: latest
+
+- name: add repository certbot
+  ansible.builtin.apt_repository:
+    repo: 'ppa:certbot/certbot'
+
+- name: Install
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    update_cache: yes
+    state: latest
+  with_items:
+    - nginx
+    - certbot
+    - python3-certbot-nginx
+#    - ansible
+
+#   Выполняем доп настройки для nginx
+- name: Remove default nginx config
+  file:
+    name: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Copy nginx config
+  template:
+    src: templates/nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+
+- name: Copy wordpress nginx config
+  template:
+    src: templates/nginx.wordpress.j2
+    dest: /etc/nginx/sites-enabled/wordpress
+
+- name: Copy gitlab nginx config
+  template:
+    src: templates/nginx.gitlab.j2
+    dest: /etc/nginx/sites-enabled/gitlab
+
+- name: Copy alertmanager nginx config
+  template:
+    src: templates/nginx.alertmanager.j2
+    dest: /etc/nginx/sites-enabled/alertmanager
+
+- name: Copy grafana nginx config
+  template:
+    src: templates/nginx.grafana.j2
+    dest: /etc/nginx/sites-enabled/grafana
+
+- name: Copy prometheus nginx config
+  template:
+    src: templates/nginx.prometheus.j2
+    dest: /etc/nginx/sites-enabled/prometheus
+
+#   Добавляем сертификаты
+#- name: Get certificates
+#  ansible.builtin.shell: certbot -n --nginx -d {{ domain }} -d www.{{ domain }} -d gitlab.{{ domain }} -d grafana.{{ domain }} -d prometheus.{{ domain }} -d alertmanager.{{ domain }} -m my_mail@gmail.com --agree-tos
+- name: Restore LetsEncrypt Certificate
+  ansible.builtin.unarchive:
+    src: ~/le.tar.gz
+    dest: /etc
+    owner: ubuntu
+    group: ubuntu
+
+#   Перезапуск nginx
+- name: reload nginx
+  ansible.builtin.service:
+    name: nginx
+    state: restarted

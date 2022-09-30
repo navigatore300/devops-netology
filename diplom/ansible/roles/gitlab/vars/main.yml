@@ -1,0 +1,4 @@
+---
+# vars file for gitlab
+gitlab_password: "{{ gitlab_password }}"
+gitlab_token: "{{ gitlab_token }}"

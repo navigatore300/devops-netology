@@ -1,0 +1,106 @@
+---
+# tasks file for wordpress
+- name: Install
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    update_cache: yes
+    state: latest
+  with_items:
+    - apache2
+    - php
+    - libapache2-mod-php
+    - php-mysql
+    - php-curl
+    - php-gd
+    - php-mbstring
+    - php-xml
+    - php-xmlrpc
+    - php-soap
+    - php-intl
+    - php-zip
+    - git
+
+- name: Create the directory for your_domain
+  file:
+    name: "/var/www/{{ your_domain }}"
+    state: directory
+    owner: "www-data"
+    group: "www-data"
+    mode: '0755'
+
+- name: bare-bones configuration
+  template:
+    src: "templates/site.conf.j2"
+    dest: "/etc/apache2/sites-available/{{ your_domain }}.conf"
+
+- name: enable the new virtual host
+  shell: a2ensite {{ your_domain }}
+
+- name: disable the default website
+  shell: a2dissite 000-default
+
+- name: enable mod_rewrite
+  shell: a2enmod rewrite
+
+- name: restart apache
+  ansible.builtin.service:
+    name: apache2
+    state: restarted
+
+- name: download and unpacking WordPress
+  unarchive:
+    src: https://wordpress.org/latest.tar.gz
+    dest: "/var/www/{{ your_domain }}"
+    remote_src: yes
+#    creates: "/var/www/{{ your_domain }}/wordpress"
+
+- name: chown www-data
+  file:
+    name: "/var/www/{{ your_domain }}"
+    state: directory
+    recurse: yes
+    owner: www-data
+    group: www-data
+
+- name: chmod 750
+  shell: "find /var/www/{{ your_domain }}/ -type d -exec chmod 750 {} \\;"
+
+- name: chmod 640
+  shell: "find /var/www/{{ your_domain }}/ -type f -exec chmod 640 {} \\;"
+
+- name: copy wp-config.php
+  template:
+    src: "templates/wp-config.php.j2"
+    dest: "/var/www/{{ your_domain }}/wp-config.php"
+
+- name: Add user for gitlab runner
+  ansible.builtin.user:
+    name: gitlab-runner
+
+- name: Add gitlab-runner sudo
+  user:
+    name=gitlab-runner
+    groups=sudo
+    append=yes
+    state=present
+
+- name: Allow gitlab_runner user to have passwordless sudo
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: '^gitlab-runner'
+    line: 'gitlab-runner ALL=(ALL) NOPASSWD: ALL'
+
+- name: Create directory for runner authorized_keys
+  file:
+    name: /home/gitlab-runner/.ssh/
+    state: directory
+    owner: gitlab-runner
+    group: gitlab-runner
+
+- name: Copy authorized_keys file
+  copy:
+    src: files/authorized_keys
+    dest: /home/gitlab-runner/.ssh/
+    owner: gitlab-runner
+    group: gitlab-runner

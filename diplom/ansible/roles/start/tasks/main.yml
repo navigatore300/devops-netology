@@ -1,0 +1,51 @@
+---
+#- name: Wait start
+#- name: "Testing SSH connection to host"
+#  wait_for:
+#    host: "{{ inventory_hostname }}"
+#    search_regex: OpenSSH
+#    port: 22
+#    state: "started"
+#    timeout: 5
+#  connection: local
+#  become: false
+#  ignore_errors: yes
+#  register: ssh_connection
+
+- name: Wait start
+  ansible.builtin.wait_for_connection:
+    
+- name: Update hosts nginx
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ ip_nginx }} nginx www.{{ domain }}"
+
+- name: Update hosts db01
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ ip_db01 }} db01 db01.{{ domain }}"
+
+- name: Update hosts db02
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ ip_db02 }} db02 db02.{{ domain }}"
+
+- name: Update hosts wordpress
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ ip_app }} app app.{{ domain }}"
+
+- name: Update hosts gitlab
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ ip_gitlab }} gitlab gitlab.{{ domain }}"
+
+- name: Update hosts runner
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ ip_runner }} runner runner.{{ domain }}"
+
+- name: Update hosts monitoring
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ ip_monitoring }} monitoring monitoring.{{ domain }}"

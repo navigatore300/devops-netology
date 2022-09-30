@@ -1,0 +1,5 @@
+---
+# defaults file for nginx_role
+domain: ""
+ip_wordpress: ""
+ip_gitlab: ""

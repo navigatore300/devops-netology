@@ -1,3 +1,11 @@
+# Ignore ssh private keys
+id_rsa
+
+# Ignore keys
+key.json
+
+variables.tf
+
 # Local .terraform directories
 **/.terraform/*
 
@@ -33,8 +41,6 @@ override.tf.json
 .terraformrc
 terraform.rc
 
-# Ignore keys
-key.json
 
 #Ignore lock file
 #.terraform.lock.hcl
